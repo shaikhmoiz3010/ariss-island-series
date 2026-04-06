@@ -108,7 +108,7 @@ export default function ButtonPanel({ setLeftState, setRightState, onActivity, o
   function holdCurtainEnd() { stopHold(5); setRightState("curt"); }
 
   return (
-    <div className="px-[1px] py-[5px] flex flex-col gap-0">
+    <div className="py-[5px] flex flex-col gap-0">
       {/* Row 1 — Lights | Switch */}
       <ButtonRow
         labelL="Lights"  labelR="Switch"

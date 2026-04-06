@@ -52,7 +52,7 @@ export default function SwitchPanel() {
   })();
 
   return (
-    <div className="h-[323px] rounded-[30px]"
+    <div className="h-[322px] rounded-[30px]"
       onMouseEnter={trigger}
       style={{
         position:     "relative",

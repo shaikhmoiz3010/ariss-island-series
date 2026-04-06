@@ -33,8 +33,8 @@ export default function DisplayRow({ leftState, rightState, devices }) {
         pointerEvents: "none",
         borderRadius:  "inherit",
         background: [
-          "linear-gradient(280deg, rgba(255,255,255,0.24) 0%, transparent 60%)",
-          // "radial-gradient(ellipse 80% 35% at 50% 0%, rgba(255,255,255,0.2) 0%, transparent 100%)",
+          "linear-gradient(70deg, rgba(255,255,255,0.23) 40%, transparent 70%)",
+          // "radial-gradient(ellipse 50% 85% at 20% 40%, rgba(255,255,255,0.2) 50%, transparent 70%)",
         ].join(", "),
       }} />
 
