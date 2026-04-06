@@ -4,8 +4,10 @@ import { HOUSING_THEMES, BUTTON_THEMES, DEFAULT_HOUSING, DEFAULT_BUTTON } from "
 export const useThemeStore = create((set) => ({
   housingId:  DEFAULT_HOUSING,
   buttonId:   DEFAULT_BUTTON,
+  bgMode:     "light",
   setHousing: (id) => set({ housingId: id }),
   setButton:  (id) => set({ buttonId:  id }),
+  toggleBg:   ()   => set((s) => ({ bgMode: s.bgMode === "light" ? "dark" : "light" })),
 }));
 
 export const useHousingTheme = () => {

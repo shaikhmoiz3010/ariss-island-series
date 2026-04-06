@@ -9,14 +9,14 @@ const BG = {
     bg: "#a8a9ab",
     gradient: `radial-gradient(ellipse 80% 60% at 30% 20%, rgba(80,120,95,0.07) 0%, transparent 100%),
                radial-gradient(ellipse 60% 40% at 70% 80%, rgba(233,200,124,0.025) 0%, transparent 100%)`,
-    headerBg: "rgba(255,255,255,0.18)",
+    headerBg:     "rgba(255,255,255,0.18)",
     headerBorder: "rgba(0,0,0,0.08)",
   },
   dark: {
     bg: "#1a1b1e",
     gradient: `radial-gradient(ellipse 80% 60% at 30% 20%, rgba(40,70,55,0.18) 0%, transparent 100%),
                radial-gradient(ellipse 60% 40% at 70% 80%, rgba(233,200,124,0.04) 0%, transparent 100%)`,
-    headerBg: "rgba(0,0,0,0.60)",
+    headerBg:     "rgba(0,0,0,0.60)",
     headerBorder: "rgba(255,255,255,0.06)",
   },
 };
