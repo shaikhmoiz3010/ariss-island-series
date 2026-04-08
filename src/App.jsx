@@ -68,11 +68,11 @@ export default function App() {
       </header>
 
       <main style={{
-        flex: 1,
+        flex: 2,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "60px 24px 80px",
+        padding: "6px 24px 80px",
       }}>
         <div style={{
           display: "flex",
@@ -82,7 +82,7 @@ export default function App() {
           flexWrap: "wrap",
         }}>
           <SwitchPanel />
-<div style={{ maxWidth: '750px', width: '100%', margin: '0 auto', padding: '0 24px 80px' }}>
+<div style={{ maxWidth: '600px', width: '100%', margin: '0 auto', padding: '0 24px 80px' }}>
   <RoomLayout />
 </div>
           
