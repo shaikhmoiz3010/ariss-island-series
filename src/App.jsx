@@ -3,6 +3,7 @@ import InfoPanel from "./components/InfoPanel/InfoPanel";
 import ThemePicker from "./components/ThemePicker/ThemePicker";
 import BgToggle from "./components/ThemePicker/BgToggle";
 import { useThemeStore } from "./state/useThemeStore";
+import RoomLayout from "./components/RoomLayout/RoomLayout";  
 
 const BG = {
   light: {
@@ -81,7 +82,12 @@ export default function App() {
           flexWrap: "wrap",
         }}>
           <SwitchPanel />
-          <InfoPanel />
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
+  <RoomLayout />
+            {/* <InfoPanel /> */}
+</div>
+          
+
         </div>
       </main>
     </div>

@@ -10,7 +10,7 @@ export default function ClockDisplay() {
         {m}
         <span className="text-[10px] font-light text-white/30 ml-0.5">{ap}</span>
       </div>
-      <div className="text-[8px] font-mono tracking-[4px] text-amber-400/20 mt-1 uppercase">ARISS</div>
+      {/* <div className="text-[8px] font-mono tracking-[4px] text-amber-400/20 mt-1 uppercase">ARISS</div> */}
     </div>
   );
 }
