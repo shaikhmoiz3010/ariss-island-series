@@ -82,9 +82,8 @@ export default function App() {
           flexWrap: "wrap",
         }}>
           <SwitchPanel />
-          <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
+<div style={{ maxWidth: '750px', width: '100%', margin: '0 auto', padding: '0 24px 80px' }}>
   <RoomLayout />
-            {/* <InfoPanel /> */}
 </div>
           
 
