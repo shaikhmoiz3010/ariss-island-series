@@ -27,5 +27,5 @@ export const BUTTON_THEMES = [
 ];
 
 export const DEFAULT_HOUSING = "white";
-export const DEFAULT_BUTTON  = "pastel-green";
+export const DEFAULT_BUTTON  = "black";
 

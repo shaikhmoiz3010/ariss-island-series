@@ -6,8 +6,8 @@ export default function DisplayRow({ leftState, rightState, devices }) {
   const housingTheme = useHousingTheme();
 
   const borderColor = housingTheme?.id === "black"
-    ? "#0a0a0b"
-    : "#c8c8c8";
+    ? "#1a1a1a"
+    : "#FFFFFF";
 
   return (
     <div className="flex w-[336px] h-[54px] ml-[2px] mb-[1px] rounded-full overflow-hidden"
