@@ -237,7 +237,7 @@ export default function App() {
 
             {/* room layout */}
             <div className={`
-              flex-1 w-full min-h-[260px] sm:min-h-0
+              flex-1 w-full min-h-[260px] sm:h-full md:h-full
               rounded-2xl overflow-hidden transition-all duration-400
               ${isDark ? "bg-white/3 shadow-[0_2px_24px_rgba(0,0,0,0.35)]" : "bg-white/20 shadow-[0_2px_24px_rgba(0,0,0,0.08)]"}
             `}>

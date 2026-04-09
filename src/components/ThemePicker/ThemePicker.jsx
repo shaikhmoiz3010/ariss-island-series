@@ -6,12 +6,11 @@ const LIGHT_IDS = ["white", "silver"];
 function SwatchRow({ label, themes, activeId, onSelect }) {
   return (
     <div  style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-      <span style={{
+      <span className="text-orange-600" style={{
         fontFamily:    "'JetBrains Mono', monospace",
         fontSize:      "12px",
         letterSpacing: "2.5px",
         textTransform: "uppercase",
-        color:         "rgba(233,200,124,0.40)",
         whiteSpace:    "nowrap",
         minWidth:      "42px",
       }}>
@@ -56,7 +55,7 @@ function SwatchRow({ label, themes, activeId, onSelect }) {
                   fontSize:       "9px",
                   fontWeight:     700,
                   pointerEvents:  "none",
-                  color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.90)",
+                  color: isLight ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.90)",
                 }}>✓</span>
               )}
             </button>

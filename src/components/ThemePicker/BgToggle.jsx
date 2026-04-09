@@ -13,8 +13,8 @@ export default function BgToggle() {
         alignItems:   "center",
         gap:          "7px",
         background:   isDark ? "rgba(233,200,124,0.12)" : "rgba(255,255,255,0.08)",
-        border:       isDark ? "1px solid rgba(233,200,124,0.30)" : "1px solid rgba(255,255,255,0.14)",
-        borderRadius: "20px",
+        border:       isDark ? "1px solid rgba(233,200,124,0.30)" : "1px solid rgba(0,0,0,0.95)",
+        borderRadius: "999px",
         padding:      "5px 12px 5px 9px",
         cursor:       "pointer",
         transition:   "all 0.22s ease",
@@ -28,7 +28,7 @@ export default function BgToggle() {
         fontSize:      "10px",
         letterSpacing: "1.5px",
         textTransform: "uppercase",
-        color:         isDark ? "rgba(233,200,124,0.85)" : "rgba(255,255,255,0.55)",
+        color:         isDark ? "rgba(233,200,124,0.85)" : "rgba(0,0,0,0.95)",
       }}>
         {isDark ? "Light" : "Dark"}
       </span>
