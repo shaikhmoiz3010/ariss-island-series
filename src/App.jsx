@@ -4,169 +4,222 @@ import ThemePicker from "./components/ThemePicker/ThemePicker";
 import BgToggle from "./components/ThemePicker/BgToggle";
 import { useThemeStore } from "./state/useThemeStore";
 import RoomLayout from "./components/RoomLayout/RoomLayout";
-
-const BG = {
-  light: {
-    bg:           "bg-[#a8a9ab]",
-    headerBg:     "bg-white/20",
-    headerBorder: "border-black/8",
-  },
-  dark: {
-    bg:           "bg-[#1a1b1e]",
-    headerBg:     "bg-black/60",
-    headerBorder: "border-white/6",
-  },
-};
+import { HOUSING_THEMES, BUTTON_THEMES } from "./constants/themes";
 
 export default function App() {
-  const bgMode     = useThemeStore((s) => s.bgMode);
-  const isDark     = bgMode === "dark";
-  const theme      = BG[bgMode];
-  const [open, setOpen] = useState(false);
+  const bgMode = useThemeStore((s) => s.bgMode);
+  const { housingId, buttonId, setHousing, setButton } = useThemeStore();
+  const isDark = bgMode === "dark";
+
+  const [bodyOpen,   setBodyOpen]   = useState(false);
+  const [switchOpen, setSwitchOpen] = useState(false);
+
+  const closeAll = () => { setBodyOpen(false); setSwitchOpen(false); };
 
   return (
-    <div className={`min-h-screen flex flex-col transition-colors duration-400 ${theme.bg}`}>
+    <div className={`min-h-screen flex flex-col transition-colors duration-500 ${isDark ? "bg-gray-950" : "bg-slate-300"}`}>
 
       {/* ══ HEADER ══ */}
       <header className={`
-        sticky top-0 h-14 z-50
-        backdrop-blur-xl border-b
-        transition-all duration-400
-        ${theme.headerBg} ${theme.headerBorder}
+        sticky top-0 h-14 z-50 backdrop-blur-2xl border-b transition-all duration-500
+        ${isDark ? "bg-black border-white" : "bg-gray-400 border-gray-400"}
       `}>
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 h-full flex items-center justify-between relative">
 
-          {/* brand */}
-          <div className="flex items-baseline gap-2">
-            <span className="font-mono text-base sm:text-lg tracking-widest text-amber-600 uppercase font-semibold">
+        {/* bottom shimmer */}
+        <div className={`absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent ${isDark ? "via-amber-400/25" : "via-amber-500/20"} to-transparent`}/>
+
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 h-full flex items-center justify-between relative">
+          {/* ── brand ── */}
+          <div className="flex items-center gap-2.6">
+            {/* name */}
+            <span className="font-mono text-sm sm:text-base tracking-[0.18em] text-orange-600 uppercase font-medium">
               ARISS
             </span>
-            <span className={`
-              hidden sm:inline text-xs sm:text-sm tracking-wide
-              transition-colors duration-400
-              ${isDark ? "text-white/55" : "text-black/45"}
-            `}>
+            <span className={`mx-3 hidden sm:inline font-sans text-[13px] tracking-[3px] transition-colors duration-400 ${isDark ? "text-white" : "text-black"}`}>
               Island Series
             </span>
           </div>
 
-          {/* right controls */}
-          <div className="flex items-center gap-2 sm:gap-4 relative">
-
+          {/* ── right controls ── */}
+          <div className="flex items-center gap-2 sm:gap-3 relative">
+            {/* bg toggle */}
             <BgToggle />
 
-            {/* divider — desktop only */}
-            <div className={`
-              hidden sm:block w-px h-6 flex-shrink-0
-              ${isDark ? "bg-white/10" : "bg-black/12"}
-            `} />
+            {/* divider */}
+            {/* <div className={`hidden sm:block w-px h-5 rounded-full ${isDark ? "bg-white/10" : "bg-black/10"}`}/> */}
 
-            {/* ThemePicker — desktop inline */}
+            {/* ── DESKTOP: ThemePicker inline ── */}
             <div className="hidden sm:block">
               <ThemePicker />
             </div>
 
-            {/* Theme button — mobile only */}
-            <button
-              onClick={() => setOpen(o => !o)}
-              className={`
-                sm:hidden flex items-center gap-1.5 px-2.5 py-1.5
-                rounded-lg border cursor-pointer
-                transition-all duration-200
-                ${open
-                  ? isDark ? "bg-amber-400/15 border-amber-400/30" : "bg-black/10 border-black/15"
-                  : isDark ? "bg-white/6 border-white/10"          : "bg-black/5 border-black/10"
-                }
-              `}
-            >
-              {/* palette icon */}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                className={isDark ? "stroke-amber-400/80" : "stroke-black/55"}
-              >
-                <circle cx="12" cy="12" r="10"/>
-                <circle cx="8"  cy="10" r="1.5" className={isDark?"fill-amber-400/80":"fill-black/55"}/>
-                <circle cx="14" cy="8"  r="1.5" className={isDark?"fill-amber-400/80":"fill-black/55"}/>
-                <circle cx="16" cy="14" r="1.5" className={isDark?"fill-amber-400/80":"fill-black/55"}/>
-                <circle cx="9"  cy="16" r="1.5" className={isDark?"fill-amber-400/80":"fill-black/55"}/>
-              </svg>
-
-              <span className={`
-                font-mono text-[9px] tracking-[1.5px] uppercase
-                ${isDark ? "text-amber-400/80" : "text-black/55"}
-              `}>
-                Theme
-              </span>
-
-              {/* chevron */}
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
-                strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            {/* ── MOBILE: Body color button ── */}
+            <div className="relative sm:hidden">
+              <button
+                onClick={() => { setBodyOpen(o => !o); setSwitchOpen(false); }}
                 className={`
-                  transition-transform duration-200
-                  ${open ? "rotate-180" : "rotate-0"}
-                  ${isDark ? "stroke-amber-400/60" : "stroke-black/40"}
+                  flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border
+                  cursor-pointer transition-all duration-200 active:scale-95
+                  ${bodyOpen
+                    ? isDark ? "bg-cyan-900 border-white" : "bg-gray-700 border-gray-800"
+                    : isDark ? "bg-gray-300 border-gray-300"          : "bg-gray-800 border-black"
+                  }
                 `}
               >
-                <polyline points="6 9 12 15 18 9"/>
-              </svg>
-            </button>
-
-            {/* dropdown panel — mobile only */}
-            {open && (
-              <>
-                {/* backdrop */}
+                {/* body swatch */}
                 <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setOpen(false)}
+                  className="w-3 h-3 rounded-sm border border-black/20 flex-shrink-0"
+                  style={{ background: HOUSING_THEMES.find(t => t.id === housingId)?.swatch ?? "#fff" }}
                 />
+                <span className={`font-mono text-[9px] tracking-[1.2px] uppercase font-medium ${isDark ? "text-black" : "text-white"}`}>
+                  Body
+                </span>
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round"
+                  className={`transition-transform duration-200 ${bodyOpen ? "rotate-180" : "rotate-0"} ${isDark ? "stroke-black" : "stroke-white"}`}>
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
 
-                <div className={`
-                  absolute top-[calc(100%+8px)] right-0 z-50
-                  min-w-[230px] p-4 rounded-2xl border
-                  shadow-2xl
-                  animate-[dropIn_0.18s_ease_forwards]
-                  ${isDark
-                    ? "bg-[#0a0c12]/95 border-white/10 shadow-black/60"
-                    : "bg-white/95 border-black/10 shadow-black/14"
-                  }
-                  backdrop-blur-xl
-                `}>
-
-                  {/* dropdown title */}
-                  <p className={`
-                    font-mono text-[8px] tracking-[3px] uppercase mb-3 pb-2.5
-                    border-b
-                    ${isDark
-                      ? "text-amber-400/40 border-white/6"
-                      : "text-black/30 border-black/6"
-                    }
+              {/* Body dropdown */}
+              {bodyOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={closeAll}/>
+                  <div className={`
+                    absolute top-[calc(100%+8px)] right-0 z-50
+                    w-[200px] p-3.5 rounded-2xl border shadow-2xl
+                    animate-[dropIn_0.16s_ease_forwards] backdrop-blur-2xl
+                    ${isDark ? "bg-gray-700 border-white shadow-black" : "bg-gray-400 border-gray-500 shadow-black"}
                   `}>
-                    Appearance
-                  </p>
+                    {/* header */}
+                    <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/6">
+                      <span className={`font-mono text-[12px] tracking-[2.5px] uppercase font-semibold ${isDark ? "text-amber-400" : "text-black"}`}>
+                        Body Colour
+                      </span>
+                      <button onClick={closeAll} className={`w-4 h-4 rounded flex items-center justify-center cursor-pointer ${isDark ? "hover:bg-white/8" : "hover:bg-black/6"}`}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" className={isDark ? "stroke-white" : "stroke-black"}>
+                          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                      </button>
+                    </div>
 
-                  {/* ThemePicker inside dropdown */}
-                  <div className="scale-90 origin-top-left">
-                    <ThemePicker />
+                    {/* swatches */}
+                    <div className="flex flex-wrap gap-2">
+                      {HOUSING_THEMES.map(t => (
+                        <button
+                          key={t.id}
+                          title={t.label}
+                          onClick={() => { setHousing(t.id); }}
+                          className="relative w-8 h-8 rounded-lg border-2 cursor-pointer transition-all duration-150 active:scale-90 hover:scale-110"
+                          style={{
+                            background:  t.swatch,
+                            borderColor: t.id === housingId ? "#f59e0b" : "rgba(255,255,255,0.15)",
+                            boxShadow:   t.id === housingId ? "0 0 0 3px rgba(245,158,11,0.25)" : "none",
+                          }}
+                        >
+                          {t.id === housingId && (
+                            <span className="absolute inset-0 flex items-center justify-center">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+                                className={t.id === "black" ? "stroke-white/80" : "stroke-black/60"}>
+                                <polyline points="20 6 9 17 4 12"/>
+                              </svg>
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* selected label */}
+                    <p className={`mt-2.5 font-mono text-[8px] tracking-[1.5px] uppercase text-center ${isDark ? "text-white/30" : "text-black/30"}`}>
+                      {HOUSING_THEMES.find(t => t.id === housingId)?.label ?? "—"}
+                    </p>
                   </div>
+                </>
+              )}
+            </div>
 
-                  {/* done button */}
-                  <button
-                    onClick={() => setOpen(false)}
-                    className={`
-                      mt-3.5 w-full py-2 rounded-lg border
-                      font-mono text-[9px] tracking-[1.5px] uppercase
-                      cursor-pointer transition-colors duration-200
-                      ${isDark
-                        ? "border-white/8 bg-white/4 text-white/35 hover:bg-white/8"
-                        : "border-black/8 bg-black/3 text-black/35 hover:bg-black/6"
-                      }
-                    `}
-                  >
-                    Done
-                  </button>
-                </div>
-              </>
-            )}
+            {/* ── MOBILE: Switch button color ── */}
+            <div className="relative sm:hidden">
+              <button
+                onClick={() => { setSwitchOpen(o => !o); setBodyOpen(false); }}
+                className={`
+                  flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border
+                  cursor-pointer transition-all duration-200 active:scale-95
+                  ${switchOpen
+                    ? isDark ? "bg-amber-400/15 border-amber-400/35" : "bg-amber-500/12 border-amber-500/30"
+                    : isDark ? "bg-white/5 border-white/10"          : "bg-black/4 border-black/8"
+                  }
+                `}
+              >
+                {/* button swatch */}
+                <div
+                  className="w-3 h-3 rounded-sm border border-black/20 flex-shrink-0"
+                  style={{ background: BUTTON_THEMES.find(t => t.id === buttonId)?.swatch ?? "#5c8a6e" }}
+                />
+                <span className={`font-mono text-[9px] tracking-[1.2px] uppercase font-medium ${isDark ? "text-white/70" : "text-black/60"}`}>
+                  Switch
+                </span>
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round"
+                  className={`transition-transform duration-200 ${switchOpen ? "rotate-180" : "rotate-0"} ${isDark ? "stroke-white/40" : "stroke-black/35"}`}>
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+
+              {/* Switch dropdown */}
+              {switchOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={closeAll}/>
+                  <div className={`
+                    absolute top-[calc(100%+8px)] right-0 z-50
+                    w-[200px] p-3.5 rounded-2xl border shadow-2xl
+                    animate-[dropIn_0.16s_ease_forwards] backdrop-blur-2xl
+                    ${isDark ? "bg-[#0c0e14]/96 border-white/8 shadow-black/70" : "bg-white/96 border-black/8 shadow-black/12"}
+                  `}>
+                    {/* header */}
+                    <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/6">
+                      <span className={`font-mono text-[8px] tracking-[2.5px] uppercase font-semibold ${isDark ? "text-amber-400/60" : "text-black/40"}`}>
+                        Button Colour
+                      </span>
+                      <button onClick={closeAll} className={`w-4 h-4 rounded flex items-center justify-center cursor-pointer ${isDark ? "hover:bg-white/8" : "hover:bg-black/6"}`}>
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" className={isDark ? "stroke-white/40" : "stroke-black/40"}>
+                          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* swatches */}
+                    <div className="flex flex-wrap gap-2">
+                      {BUTTON_THEMES.map(t => (
+                        <button
+                          key={t.id}
+                          title={t.label}
+                          onClick={() => { setButton(t.id); }}
+                          className="relative w-8 h-8 rounded-lg border-2 cursor-pointer transition-all duration-150 active:scale-90 hover:scale-110"
+                          style={{
+                            background:  t.swatch,
+                            borderColor: t.id === buttonId ? "#f59e0b" : "rgba(255,255,255,0.15)",
+                            boxShadow:   t.id === buttonId ? "0 0 0 3px rgba(245,158,11,0.25)" : "none",
+                          }}
+                        >
+                          {t.id === buttonId && (
+                            <span className="absolute inset-0 flex items-center justify-center">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+                                className={t.id === "white" || t.id === "silver" ? "stroke-black/60" : "stroke-white/80"}>
+                                <polyline points="20 6 9 17 4 12"/>
+                              </svg>
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* selected label */}
+                    <p className={`mt-2.5 font-mono text-[8px] tracking-[1.5px] uppercase text-center ${isDark ? "text-white/30" : "text-black/30"}`}>
+                      {BUTTON_THEMES.find(t => t.id === buttonId)?.label ?? "—"}
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
 
           </div>
         </div>
@@ -174,10 +227,7 @@ export default function App() {
 
       {/* ══ MAIN ══ */}
       <main className="flex-1 flex flex-col items-center px-3 sm:px-4 lg:px-6 py-5 sm:py-8 gap-5 sm:gap-8">
-
         <div className="w-full max-w-[1200px] flex-1 flex flex-col">
-
-          {/* column on mobile, row on sm+ */}
           <div className="flex flex-col sm:flex-row items-center sm:items-stretch gap-4 sm:gap-6 lg:gap-8 w-full flex-1">
 
             {/* switch panel */}
@@ -187,41 +237,16 @@ export default function App() {
 
             {/* room layout */}
             <div className={`
-              flex-1 w-full h-full
-               rounded-2xl overflow-hidden
-              transition-all duration-400
-              ${isDark
-                ? "bg-white/2 shadow-[0_2px_24px_rgba(0,0,0,0.35)]"
-                : "bg-white/18 shadow-[0_2px_24px_rgba(0,0,0,0.08)]"
-              }
+              flex-1 w-full min-h-[260px] sm:min-h-0
+              rounded-2xl overflow-hidden transition-all duration-400
+              ${isDark ? "bg-white/3 shadow-[0_2px_24px_rgba(0,0,0,0.35)]" : "bg-white/20 shadow-[0_2px_24px_rgba(0,0,0,0.08)]"}
             `}>
               <RoomLayout />
             </div>
 
           </div>
         </div>
-
       </main>
-
-      {/* ══ FOOTER ══ */}
-      <footer className={`
-        px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-2
-        border-t transition-colors duration-400
-        ${isDark ? "border-white/5" : "border-black/6"}
-      `}>
-        <span className={`
-          font-mono text-[10px] tracking-[2px] uppercase
-          ${isDark ? "text-amber-400/30" : "text-[rgba(26,42,90,0.30)]"}
-        `}>
-          ARISS · Island Series
-        </span>
-        <span className={`
-          font-mono text-[10px]
-          ${isDark ? "text-white/15" : "text-black/20"}
-        `}>
-          Tap devices to control
-        </span>
-      </footer>
 
     </div>
   );

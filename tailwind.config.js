@@ -8,7 +8,7 @@ export default {
     extend: {
       // ── Custom fonts matching index.css import ──
       fontFamily: {
-        ui:   ['Inter', 'sans-serif'],
+        ui: ['Inter', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
 
@@ -16,8 +16,8 @@ export default {
       colors: {
         amber: {
           brand: '#e9c87c',
-          glow:  'rgba(233,200,124,0.35)',
-          dim:   'rgba(233,200,124,0.14)',
+          glow: 'rgba(233,200,124,0.35)',
+          dim: 'rgba(233,200,124,0.14)',
         },
         glass: '#030406',
         housing: {
@@ -35,7 +35,7 @@ export default {
       borderRadius: {
         housing: '34px',
         display: '18px',
-        pill:    '20px',
+        pill: '20px',
       },
 
       // ── Box shadows ──
@@ -73,21 +73,26 @@ export default {
       keyframes: {
         blink: {
           '0%, 100%': { opacity: '1' },
-          '50%':       { opacity: '0' },
+          '50%': { opacity: '0' },
         },
         fadeIn: {
           from: { opacity: '0', transform: 'translateY(2px)' },
-          to:   { opacity: '1', transform: 'translateY(0)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
         },
         flashPulse: {
-          '0%':   { opacity: '0.25' },
+          '0%': { opacity: '0.25' },
           '100%': { opacity: '0' },
+        },
+        dropIn: {
+          from: { opacity: '0', transform: 'translateY(-6px) scale(0.97)' },
+          to: { opacity: '1', transform: 'translateY(0) scale(1)' },
         },
       },
       animation: {
-        blink:       'blink 1s step-end infinite',
-        fadeIn:      'fadeIn 0.2s ease forwards',
-        flashPulse:  'flashPulse 0.28s ease-out forwards',
+        blink: 'blink 1s step-end infinite',
+        fadeIn: 'fadeIn 0.2s ease forwards',
+        flashPulse: 'flashPulse 0.28s ease-out forwards',
+          dropIn: 'dropIn 0.16s ease forwards',
       },
 
       // ── Backdrop blur ──
