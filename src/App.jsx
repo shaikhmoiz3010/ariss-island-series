@@ -1,5 +1,5 @@
+import { useState } from "react";
 import SwitchPanel from "./components/Switch/SwitchPanel";
-import InfoPanel from "./components/InfoPanel/InfoPanel";
 import ThemePicker from "./components/ThemePicker/ThemePicker";
 import BgToggle from "./components/ThemePicker/BgToggle";
 import { useThemeStore } from "./state/useThemeStore";
@@ -7,118 +7,212 @@ import RoomLayout from "./components/RoomLayout/RoomLayout";
 
 const BG = {
   light: {
-    bg: "#a8a9ab",
-    gradient: `radial-gradient(ellipse 80% 60% at 30% 20%, rgba(80,120,95,0.07) 0%, transparent 100%),
-               radial-gradient(ellipse 60% 40% at 70% 80%, rgba(233,200,124,0.025) 0%, transparent 100%)`,
-    headerBg: "rgba(255,255,255,0.18)",
-    headerBorder: "rgba(0,0,0,0.08)",
+    bg:           "bg-[#a8a9ab]",
+    headerBg:     "bg-white/20",
+    headerBorder: "border-black/8",
   },
   dark: {
-    bg: "#1a1b1e",
-    gradient: `radial-gradient(ellipse 80% 60% at 30% 20%, rgba(40,70,55,0.18) 0%, transparent 100%),
-               radial-gradient(ellipse 60% 40% at 70% 80%, rgba(233,200,124,0.04) 0%, transparent 100%)`,
-    headerBg: "rgba(0,0,0,0.60)",
-    headerBorder: "rgba(255,255,255,0.06)",
+    bg:           "bg-[#1a1b1e]",
+    headerBg:     "bg-black/60",
+    headerBorder: "border-white/6",
   },
 };
 
 export default function App() {
-  const bgMode = useThemeStore((s) => s.bgMode);
-  const { bg, gradient, headerBg, headerBorder } = BG[bgMode];
-  const isDark = bgMode === "dark";
+  const bgMode     = useThemeStore((s) => s.bgMode);
+  const isDark     = bgMode === "dark";
+  const theme      = BG[bgMode];
+  const [open, setOpen] = useState(false);
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      background: bg,
-      backgroundImage: gradient,
-      transition: "background 0.4s ease",
-    }}>
+    <div className={`min-h-screen flex flex-col transition-colors duration-400 ${theme.bg}`}>
 
-      {/* ── HEADER ── */}
-      <header style={{
-        position: "sticky",
-        top: 0,
-        height: "56px",
-        background: headerBg,
-        borderBottom: `1px solid ${headerBorder}`,
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-        zIndex: 100,
-        transition: "background 0.4s ease, border-color 0.4s ease",
-      }}>
-        <div className="max-w-[1100px] mx-auto px-4 h-full flex items-center"
-          style={{ justifyContent: "space-between" }}>
-          <div className="flex items-baseline gap-2.5">
-            <span className="font-sans text-lg tracking-wider text-amber-600 uppercase">
+      {/* ══ HEADER ══ */}
+      <header className={`
+        sticky top-0 h-14 z-50
+        backdrop-blur-xl border-b
+        transition-all duration-400
+        ${theme.headerBg} ${theme.headerBorder}
+      `}>
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 h-full flex items-center justify-between relative">
+
+          {/* brand */}
+          <div className="flex items-baseline gap-2">
+            <span className="font-mono text-base sm:text-lg tracking-widest text-amber-600 uppercase font-semibold">
               ARISS
             </span>
-            <span style={{
-              fontFamily: "sans-serif",
-              fontSize: "14px",
-              letterSpacing: "0.05em",
-              color: isDark ? "rgba(255,255,255,0.70)" : "rgba(0,0,0,0.55)",
-              transition: "color 0.4s ease",
-            }}>
+            <span className={`
+              hidden sm:inline text-xs sm:text-sm tracking-wide
+              transition-colors duration-400
+              ${isDark ? "text-white/55" : "text-black/45"}
+            `}>
               Island Series
             </span>
           </div>
-          <div className="flex items-center gap-3 sm:gap-5">
+
+          {/* right controls */}
+          <div className="flex items-center gap-2 sm:gap-4 relative">
+
             <BgToggle />
-            <div style={{
-              width: "1px",
-              height: "28px",
-              background: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.12)",
-            }} />
-            <ThemePicker />
+
+            {/* divider — desktop only */}
+            <div className={`
+              hidden sm:block w-px h-6 flex-shrink-0
+              ${isDark ? "bg-white/10" : "bg-black/12"}
+            `} />
+
+            {/* ThemePicker — desktop inline */}
+            <div className="hidden sm:block">
+              <ThemePicker />
+            </div>
+
+            {/* Theme button — mobile only */}
+            <button
+              onClick={() => setOpen(o => !o)}
+              className={`
+                sm:hidden flex items-center gap-1.5 px-2.5 py-1.5
+                rounded-lg border cursor-pointer
+                transition-all duration-200
+                ${open
+                  ? isDark ? "bg-amber-400/15 border-amber-400/30" : "bg-black/10 border-black/15"
+                  : isDark ? "bg-white/6 border-white/10"          : "bg-black/5 border-black/10"
+                }
+              `}
+            >
+              {/* palette icon */}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                className={isDark ? "stroke-amber-400/80" : "stroke-black/55"}
+              >
+                <circle cx="12" cy="12" r="10"/>
+                <circle cx="8"  cy="10" r="1.5" className={isDark?"fill-amber-400/80":"fill-black/55"}/>
+                <circle cx="14" cy="8"  r="1.5" className={isDark?"fill-amber-400/80":"fill-black/55"}/>
+                <circle cx="16" cy="14" r="1.5" className={isDark?"fill-amber-400/80":"fill-black/55"}/>
+                <circle cx="9"  cy="16" r="1.5" className={isDark?"fill-amber-400/80":"fill-black/55"}/>
+              </svg>
+
+              <span className={`
+                font-mono text-[9px] tracking-[1.5px] uppercase
+                ${isDark ? "text-amber-400/80" : "text-black/55"}
+              `}>
+                Theme
+              </span>
+
+              {/* chevron */}
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
+                strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                className={`
+                  transition-transform duration-200
+                  ${open ? "rotate-180" : "rotate-0"}
+                  ${isDark ? "stroke-amber-400/60" : "stroke-black/40"}
+                `}
+              >
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+
+            {/* dropdown panel — mobile only */}
+            {open && (
+              <>
+                {/* backdrop */}
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setOpen(false)}
+                />
+
+                <div className={`
+                  absolute top-[calc(100%+8px)] right-0 z-50
+                  min-w-[230px] p-4 rounded-2xl border
+                  shadow-2xl
+                  animate-[dropIn_0.18s_ease_forwards]
+                  ${isDark
+                    ? "bg-[#0a0c12]/95 border-white/10 shadow-black/60"
+                    : "bg-white/95 border-black/10 shadow-black/14"
+                  }
+                  backdrop-blur-xl
+                `}>
+
+                  {/* dropdown title */}
+                  <p className={`
+                    font-mono text-[8px] tracking-[3px] uppercase mb-3 pb-2.5
+                    border-b
+                    ${isDark
+                      ? "text-amber-400/40 border-white/6"
+                      : "text-black/30 border-black/6"
+                    }
+                  `}>
+                    Appearance
+                  </p>
+
+                  {/* ThemePicker inside dropdown */}
+                  <div className="scale-90 origin-top-left">
+                    <ThemePicker />
+                  </div>
+
+                  {/* done button */}
+                  <button
+                    onClick={() => setOpen(false)}
+                    className={`
+                      mt-3.5 w-full py-2 rounded-lg border
+                      font-mono text-[9px] tracking-[1.5px] uppercase
+                      cursor-pointer transition-colors duration-200
+                      ${isDark
+                        ? "border-white/8 bg-white/4 text-white/35 hover:bg-white/8"
+                        : "border-black/8 bg-black/3 text-black/35 hover:bg-black/6"
+                      }
+                    `}
+                  >
+                    Done
+                  </button>
+                </div>
+              </>
+            )}
+
           </div>
         </div>
       </header>
 
-      {/* ── MAIN ── */}
-      <main style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        padding: "24px 16px 80px",
-        gap: "24px",
-      }}>
+      {/* ══ MAIN ══ */}
+      <main className="flex-1 flex flex-col items-center px-3 sm:px-4 lg:px-6 py-5 sm:py-8 gap-5 sm:gap-8">
 
-        {/*
-          mobile  < 640px  → column  (switch on top, room below)
-          tablet  ≥ 640px  → row     (switch left, room right)
-          desktop ≥ 1024px → row with more space
-        */}
-        <div style={{
-          width: "100%",
-          maxWidth: "1200px",
-        }}>
+        <div className="w-full max-w-[1200px] flex-1 flex flex-col">
 
-          {/* row on tablet+, column on mobile */}
-          <div className="flex flex-col sm:flex-row"
-            style={{
-              width: "100%",
-              gap: "clamp(12px, 3vw, 40px)",
-              alignItems: "stretch",      // ← both children same height
-            }}
-          >
-            {/* ── Switch panel — fixed width on larger screens, full width on mobile ── */}
-            <div className="w-full sm:w-auto flex justify-center sm:justify-center flex-shrink-0">
+          {/* column on mobile, row on sm+ */}
+          <div className="flex flex-col sm:flex-row items-center sm:items-stretch gap-4 sm:gap-6 lg:gap-8 w-full flex-1">
+
+            {/* switch panel */}
+            <div className="flex-shrink-0 w-full sm:w-auto flex justify-center sm:justify-start">
               <SwitchPanel />
             </div>
 
-            {/* ── Room layout ── */}
-            <div style={{ flex: 1, width: "100%", minWidth: 0, minHeight: 0 }}>
-              <RoomLayout />
-            </div>
-          </div>
 
+              <RoomLayout />
+
+          </div>
         </div>
 
       </main>
+
+      {/* ══ FOOTER ══ */}
+      <footer className={`
+        px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-2
+        border-t transition-colors duration-400
+        ${isDark ? "border-white/5" : "border-black/6"}
+      `}>
+        <span className={`
+          font-mono text-[10px] tracking-[2px] uppercase
+          ${isDark ? "text-amber-400/30" : "text-[rgba(26,42,90,0.30)]"}
+        `}>
+          ARISS · Island Series
+        </span>
+        <span className={`
+          font-mono text-[10px]
+          ${isDark ? "text-white/15" : "text-black/20"}
+        `}>
+          Tap devices to control
+        </span>
+      </footer>
+
     </div>
   );
 }
