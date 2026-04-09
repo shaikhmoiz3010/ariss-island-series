@@ -16,14 +16,14 @@ export const HOUSING_THEMES = [
 ];
 
 export const BUTTON_THEMES = [
-  { id: "pastel-green", label: "Pastel Green", swatch: "#5c8a6e", top: "#5c8a6e", mid: "#4d7860", bot: "#3d6350" },
-  { id: "gray",         label: "Gray",         swatch: "#6a6a6a", top: "#7a7a7a", mid: "#626262", bot: "#4a4a4a" },
-  { id: "gold",         label: "Gold",         swatch: "#b8902a", top: "#c9a84c", mid: "#b8902a", bot: "#96710f" },
-  { id: "navy",         label: "Navy",         swatch: "#2a4a7f", top: "#3a5f9e", mid: "#2a4a7f", bot: "#1a3260" },
-  { id: "silver",       label: "Silver",       swatch: "#a0a8b0", top: "#b8c0c8", mid: "#a0a8b0", bot: "#828a92" },
-  { id: "orange",       label: "Orange",       swatch: "#c4601a", top: "#d4742a", mid: "#c4601a", bot: "#a04a0e" },
-  { id: "black",        label: "Black",        swatch: "#2a2a2a", top: "#3a3a3a", mid: "#2a2a2a", bot: "#1a1a1a" },
-  { id: "white",        label: "White",        swatch: "#d8d8d8", top: "#e8e8e8", mid: "#d0d0d0", bot: "#b8b8b8" },
+  { id: "pastel-green", label: "Pastel Green", swatch: "#76B088", top: "#5c8a6e", mid: "#4d7860", bot: "#76B088" },
+  { id: "gray",         label: "Gray",         swatch: "#8F8F8F", top: "#7a7a7a", mid: "#626262", bot: "#8F8F8F" },
+  { id: "gold",         label: "Gold",         swatch: "#D6B042", top: "#c9a84c", mid: "#b8902a", bot: "#D6B042" },
+  { id: "navy",         label: "Navy",         swatch: "#0B1A36", top: "#3a5f9e", mid: "#2a4a7f", bot: "#0B1A36" },
+  { id: "silver",       label: "Silver",       swatch: "#B0B8BF", top: "#b8c0c8", mid: "#a0a8b0", bot: "#B0B8BF" },
+  { id: "orange",       label: "Orange",       swatch: "#EB701A", top: "#FF870D", mid: "#FF870D", bot: "#EB701A" },
+  { id: "black",        label: "Black",        swatch: "#1F1E1E", top: "#3a3a3a", mid: "#2a2a2a", bot: "#1F1E1E" },
+  { id: "white",        label: "White",        swatch: "#D1CDCD", top: "#e8e8e8", mid: "#d0d0d0", bot: "#D1CDCD" },
 ];
 
 export const DEFAULT_HOUSING = "white";
