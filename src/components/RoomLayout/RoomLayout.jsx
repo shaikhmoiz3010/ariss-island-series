@@ -383,7 +383,9 @@ export default function RoomLayout() {
   }, [draw]);
 
   return (
-    <div
+    <div className="              flex-1 w-full sm:min-h-0
+              rounded-2xl overflow-hidden
+              transition-all duration-400"
       ref={containerRef}
       style={{
         width: '100%',

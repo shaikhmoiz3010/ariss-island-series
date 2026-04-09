@@ -185,8 +185,18 @@ export default function App() {
               <SwitchPanel />
             </div>
 
-
+            {/* room layout */}
+            <div className={`
+              flex-1 w-full h-full
+               rounded-2xl overflow-hidden
+              transition-all duration-400
+              ${isDark
+                ? "bg-white/2 shadow-[0_2px_24px_rgba(0,0,0,0.35)]"
+                : "bg-white/18 shadow-[0_2px_24px_rgba(0,0,0,0.08)]"
+              }
+            `}>
               <RoomLayout />
+            </div>
 
           </div>
         </div>
