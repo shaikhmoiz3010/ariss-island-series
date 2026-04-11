@@ -6,19 +6,27 @@ import ACTempDisplay  from "./states/ACTempDisplay";
 import ACSpdDisplay   from "./states/ACSpdDisplay";
 import CurtainDisplay from "./states/CurtainDisplay";
 
+import pendantOff  from "../../assets/icons/switchOff.png";
+import pendantOn   from "../../assets/icons/switchOn.png";
+import acOff       from "../../assets/icons/acOff.png";
+import acOn        from "../../assets/icons/acOn.png";
+import curtainOff  from "../../assets/icons/curtainOff.png";
+import curtainOn   from "../../assets/icons/curtainOn.png";
+
 export default function RightDisplay({ displayState, devices }) {
   const pendant = devices.find((d) => d.id === 1);
   const ac      = devices.find((d) => d.id === 3);
   const curtain = devices.find((d) => d.id === 5);
 
+
   const approachItems = [
-    { icon: "⏻",  label: "Pendant", on: pendant?.on     },
-    { icon: "❄️", label: "AC",      on: ac?.on           },
-    { icon: "🪟", label: "Curtain", on: curtain?.moving  },
+    { iconOff: pendantOff, iconOn: pendantOn, label: "Pendant", on: pendant?.on    },
+    { iconOff: acOff,      iconOn: acOn,      label: "AC",      on: ac?.on         },
+    { iconOff: curtainOff, iconOn: curtainOn, label: "Curtain", on: curtain?.moving },
   ];
 
   return (
-    <div className="text-white flex-1 position-relative overflow-hidden height-100% ">
+    <div className="mx-5 text-white flex-1 position-relative overflow-hidden height-100% ">
       {displayState === "idle"     && <WeatherDisplay />}
       {displayState === "approach" && <ApproachDisplay items={approachItems} align="right" />}
       {displayState === "relay"    && <RelayDisplay    device={pendant} />}

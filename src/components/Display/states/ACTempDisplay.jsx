@@ -1,24 +1,83 @@
-import StatusPill from "../../ui/StatusPill";
-import ProgressBar from "../../ui/ProgressBar";
-
 export default function ACTempDisplay({ device }) {
   const { temp } = device;
-  const pct = ((temp - 16) / 14 * 100).toFixed(0);
+  const pct = ((temp - 16) / (30 - 16) * 100).toFixed(1);
+
   return (
-    <div className="flex flex-col justify-between h-full p-1.5 px-3">
-      <div className="flex justify-between items-start">
-        <span className="text-[7px] font-mono text-white/30 uppercase tracking-widest">AC · Temp</span>
-        <StatusPill variant="ac">ADJUSTING</StatusPill>
-      </div>
-      <div className="flex items-center justify-center flex-1">
-        <span className="font-mono text-[24px] font-bold text-white/90 tracking-tight drop-shadow-[0_0_20px_rgba(232,200,122,0.38)]">
-          {temp}<span className="text-[8px] font-light text-white/30 ml-1">°C</span>
+    <div style={{
+      display:        "flex",
+      flexDirection:  "column",
+      justifyContent: "center",
+      height:         "100%",
+      padding:        "4px 10px",
+      gap:            "6px",
+      boxSizing:      "border-box",
+    }}>
+
+      {/* label + value row */}
+      <div className="" style={{ display:"flex", alignItems:"baseline", gap:"6px" }}>
+        <span className="font-sans " style={{
+
+          fontSize:      "15px",
+          color:         "rgba(255,255,255,0.55)",
+          fontWeight:    500,
+          letterSpacing: "0.5px",
+        }}>
+          Temp.
+        </span>
+        <span style={{
+          fontFamily:    "'JetBrains Mono', monospace",
+          fontSize:      "18px",
+          fontWeight:    600,
+          color:         "rgba(255,255,255,0.92)",
+          letterSpacing: "-0.5px",
+          lineHeight:    1,
+        }}>
+          {temp}
+          <span style={{ fontSize:"10px", fontWeight:300, color:"rgba(255,255,255,0.45)", marginLeft:"1px" }}>°c</span>
         </span>
       </div>
-      <div className="flex flex-col gap-1">
-        <ProgressBar percent={pct} />
-        <span className="text-[5.5px] font-mono text-white/25 text-center tracking-wide uppercase">16°C ←——→ 30°C · RELEASE TO SET</span>
+
+      {/* slider track + blue dot */}
+      <div style={{ position:"relative", height:"6px" }}>
+        {/* track */}
+        <div style={{
+          position:     "absolute",
+          top:          "50%",
+          transform:    "translateY(-50%)",
+          left:         0,
+          right:        0,
+          height:       "3px",
+          borderRadius: "3px",
+          background:   "rgba(255,255,255,0.20)",
+        }}/>
+        {/* filled portion */}
+        <div style={{
+          position:     "absolute",
+          top:          "50%",
+          transform:    "translateY(-50%)",
+          left:         0,
+          width:        `${pct}%`,
+          height:       "3px",
+          borderRadius: "3px",
+          background:   "rgba(255,255,255,0.55)",
+          transition:   "width 0.2s ease",
+        }}/>
+        {/* blue dot thumb */}
+        <div style={{
+          position:     "absolute",
+          top:          "50%",
+          left:         `${pct}%`,
+          transform:    "translate(-50%, -50%)",
+          width:        "10px",
+          height:       "10px",
+          borderRadius: "50%",
+          background:   "#3b82f6",
+          boxShadow:    "0 0 6px rgba(59,130,246,0.70)",
+          transition:   "left 0.2s ease",
+          flexShrink:   0,
+        }}/>
       </div>
+
     </div>
   );
 }

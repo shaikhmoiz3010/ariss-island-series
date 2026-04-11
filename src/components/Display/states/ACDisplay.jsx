@@ -1,23 +1,103 @@
-import StatusPill from "../../ui/StatusPill";
-import ACModeChips from "../../ui/ACModeChips";
-
 export default function ACDisplay({ device }) {
   const { on, temp, mode } = device;
+
   return (
-    <div className="flex flex-col justify-between h-full p-1.5 px-3">
-      <div className="flex justify-between items-start">
-        <span className="text-[7px] font-mono text-white/30 uppercase tracking-widest">AC</span>
-        <StatusPill variant={on ? "ac" : "off"}>{on ? `ON · ${mode}` : "OFF"}</StatusPill>
+    <div style={{
+      display:        "flex",
+      flexDirection:  "column",
+      justifyContent: "center",
+      height:         "100%",
+      padding:        "1px 30px",
+      gap:            "0px",
+      boxSizing:      "border-box",
+    }}>
+
+      {/* device name */}
+      <span className="mx-5" style={{
+
+        fontFamily:    "'JetBrains Mono', monospace",
+        fontSize:      "15px",
+        letterSpacing: "2.5px",
+        color:         "rgba(255,255,255,0.75)",
+        fontWeight:    700,
+      }}>
+        AC
+      </span>
+
+      {/* toggle pill + temp */}
+      <div style={{ display:"flex", alignItems:"center", gap:"3px" }}>
+
+        {/* ── toggle pill ── */}
+        <div style={{
+          position:     "relative",
+          width:        "45px",
+          height:       "19px",
+          borderRadius: "999px",
+          background:   on ? "#22c55e" : "#ef4444",
+          flexShrink:   0,
+          transition:   "background 0.28s ease",
+          boxShadow:    on
+            ? "0 0 8px rgba(34,197,94,0.45)"
+            : "0 0 8px rgba(239,68,68,0.40)",
+        }}>
+
+          {/* ON / OFF label */}
+          <span style={{
+            position:      "absolute",
+            top:           "50%",
+            transform:     "translateY(-50%)",
+            /* label sits on the opposite side of the knob */
+            left:          on ? "6px"  : "auto",
+            right:         on ? "auto" : "6px",
+            fontFamily:    "'JetBrains Mono', monospace",
+            fontSize:      "9.5px",
+            fontWeight:    700,
+            letterSpacing: "0.8px",
+            color:         "rgba(255,255,255,0.90)",
+            pointerEvents: "none",
+            transition:    "all 0.28s ease",
+            userSelect:    "none",
+          }}>
+            {on ? "ON" : "OFF"}
+          </span>
+
+          {/* sliding knob */}
+          <div style={{
+            position:     "absolute",
+            top:          "1px",
+            /* slides from left when OFF to right when ON */
+            left:         on ? "calc(100% - 18px)" : "2px",
+            width:        "16px",
+            height:       "16px",
+            borderRadius: "50%",
+            background:   "rgba(255,255,255,0.96)",
+            boxShadow:    "0 1px 4px rgba(0,0,0,0.35)",
+            transition:   "left 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
+          }}/>
+
+        </div>
+
+        {/* temp — only when on */}
+        {on && (
+          <span style={{
+            fontFamily:    "'JetBrains Mono', monospace",
+            fontSize:      "22px",
+            fontWeight:    600,
+            color:         "rgba(255,255,255,0.92)",
+            letterSpacing: "-0.5px",
+            lineHeight:    1,
+          }}>
+            {temp}
+            <span className="" style={{
+              fontSize:   "13px",
+              fontWeight: 300,
+              color:      "rgba(255,255,255,0.50)",
+              marginLeft: "1px",
+            }}>°c</span>
+          </span>
+        )}
+
       </div>
-      <div className="flex items-center justify-center flex-1">
-        {on
-          ? <span className="font-mono text-[24px] font-bold text-white/90 tracking-tight drop-shadow-[0_0_20px_rgba(232,200,122,0.38)]">
-              {temp}<span className="text-[8px] font-light text-white/30 ml-1">°C</span>
-            </span>
-          : <span className="text-[20px] opacity-15">❄️</span>
-        }
-      </div>
-      <ACModeChips mode={mode} />
     </div>
   );
 }
