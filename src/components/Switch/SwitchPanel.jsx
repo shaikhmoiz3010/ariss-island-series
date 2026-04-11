@@ -6,7 +6,7 @@ import { useDeviceStore }  from "../../state/useDeviceStore";
 import { useCurtainMotor } from "../../hooks/useCurtainMotor";
 import { useHousingTheme, useButtonTheme } from "../../state/useThemeStore";
 
-const FOCUS_TIMEOUT = 95000;
+const FOCUS_TIMEOUT = 4000;
 
 export default function SwitchPanel() {
   const devices      = useDeviceStore((s) => s.devices);
@@ -14,7 +14,7 @@ export default function SwitchPanel() {
   const buttonTheme  = useButtonTheme();
   useCurtainMotor(5);
 
-  const { active: motionActive, trigger } = useMotion(16000);
+  const { active: motionActive, trigger } = useMotion(6000);
 
   const [leftState,  setLeftStateRaw]  = useState("idle");
   const [rightState, setRightStateRaw] = useState("idle");
