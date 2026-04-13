@@ -14,11 +14,9 @@ export default function ACTempDisplay({ device }) {
     }}>
 
       {/* label + value row */}
-      <div className="" style={{ display:"flex", alignItems:"baseline", gap:"6px" }}>
-        <span className="font-sans " style={{
-
+      <div className="" style={{ display:"flex", alignItems:"baseline", gap:"8px" }}>
+        <span className="font-sans text-white " style={{
           fontSize:      "15px",
-          color:         "rgba(255,255,255,0.55)",
           fontWeight:    500,
           letterSpacing: "0.5px",
         }}>
@@ -33,22 +31,22 @@ export default function ACTempDisplay({ device }) {
           lineHeight:    1,
         }}>
           {temp}
-          <span style={{ fontSize:"10px", fontWeight:300, color:"rgba(255,255,255,0.45)", marginLeft:"1px" }}>°c</span>
+          <span style={{ fontSize:"13px", fontWeight:300, color:"rgba(255,255,255,0.45)", marginLeft:"1px" }}>°c</span>
         </span>
       </div>
 
       {/* slider track + blue dot */}
-      <div style={{ position:"relative", height:"6px" }}>
+      <div style={{width:"90px", position:"relative", height:"1px" }}>
         {/* track */}
         <div style={{
           position:     "absolute",
-          top:          "50%",
+          top:          "20%",
           transform:    "translateY(-50%)",
           left:         0,
           right:        0,
-          height:       "3px",
-          borderRadius: "3px",
-          background:   "rgba(255,255,255,0.20)",
+          height:       "6px",
+          borderRadius: "6px",
+          background:   "rgba(255,255,255,0.80)",
         }}/>
         {/* filled portion */}
         <div style={{
@@ -57,8 +55,8 @@ export default function ACTempDisplay({ device }) {
           transform:    "translateY(-50%)",
           left:         0,
           width:        `${pct}%`,
-          height:       "3px",
-          borderRadius: "3px",
+          height:       "6px",
+          borderRadius: "6px",
           background:   "rgba(255,255,255,0.55)",
           transition:   "width 0.2s ease",
         }}/>
@@ -68,8 +66,8 @@ export default function ACTempDisplay({ device }) {
           top:          "50%",
           left:         `${pct}%`,
           transform:    "translate(-50%, -50%)",
-          width:        "10px",
-          height:       "10px",
+          width:        "13px",
+          height:       "13px",
           borderRadius: "50%",
           background:   "#3b82f6",
           boxShadow:    "0 0 6px rgba(59,130,246,0.70)",
