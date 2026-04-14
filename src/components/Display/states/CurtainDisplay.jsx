@@ -74,7 +74,7 @@ export default function CurtainDisplay({ device }) {
       flexDirection:  "column",
       justifyContent: "space-between",
       height:         "100%",
-      padding:        "4px 6px 4px",
+      padding:        "4px 28px 4px",
 
     }}>
 

@@ -17,14 +17,14 @@ export default function LeftDisplay({ displayState, devices }) {
   const night  = devices.find((d) => d.id === 2);
   const fan    = devices.find((d) => d.id === 4);
 
-  const approachItems = [
-    { iconOff: lightsOff, iconOn: lightsOn, label: "Lights", on: lights?.on        },
-    { iconOff: nightOff,  iconOn: nightOn,  label: "Night",  on: night?.on         },
-    { iconOff: fanOff,    iconOn: fanOn,    label: "Fan",    on: fan?.speed > 0    },
-  ];
+const approachItems = [
+  { label: "Lights", on: lights?.on        },
+  { label: "Night",  on: night?.on         },
+  { label: "Fan",    on: fan?.speed > 0    },
+];
 
   return (
-    <div className="mx-5" style={{flex:1, height:"100%", position:"relative", overflow:"hidden", display:"flex", flexDirection:"column" }}>
+    <div className="" style={{flex:1, height:"100%", position:"relative", overflow:"hidden", display:"flex", flexDirection:"column" }}>
       {displayState === "idle"     && <ClockDisplay />}
       {displayState === "approach" && <ApproachDisplay items={approachItems} align="left" />}
       {displayState === "dim"      && <DimmerDisplay   device={lights} />}

@@ -8,8 +8,8 @@ export default function RelayDisplay({ device }) {
       justifyContent: "center",
       alignItems:     "flex-start",
       height:         "100%",
-      padding:        "4px 10px",
-      gap:            "6px",
+      padding:        "1px 0px 0 75px",
+      gap:            "2px",
       boxSizing:      "border-box",
     }}>
 
@@ -19,9 +19,9 @@ export default function RelayDisplay({ device }) {
         fontSize:      "10px",
         fontWeight:    600,
         color:         "rgba(255,255,255,0.88)",
-        letterSpacing: "0.5px",
+        letterSpacing: "1.5px",
       }}>
-        {label}
+        Switch
       </span>
 
       {/* sliding toggle pill */}

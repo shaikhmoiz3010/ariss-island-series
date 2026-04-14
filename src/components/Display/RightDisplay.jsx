@@ -19,14 +19,14 @@ export default function RightDisplay({ displayState, devices }) {
   const curtain = devices.find((d) => d.id === 5);
 
 
-  const approachItems = [
-    { iconOff: pendantOff, iconOn: pendantOn, label: "Pendant", on: pendant?.on    },
-    { iconOff: acOff,      iconOn: acOn,      label: "AC",      on: ac?.on         },
-    { iconOff: curtainOff, iconOn: curtainOn, label: "Curtain", on: curtain?.moving },
-  ];
+const approachItems = [
+  { label: "Switch", on: pendant?.on                  },
+  { label: "AC",      on: ac?.on                       },
+  { label: "Curtain", on: (curtain?.pos ?? 0) > 0      },
+];
 
   return (
-    <div className="mx-5 text-white flex-1 position-relative overflow-hidden height-100% ">
+    <div className=" text-white flex-1 position-relative overflow-hidden height-100% ">
       {displayState === "idle"     && <WeatherDisplay />}
       {displayState === "approach" && <ApproachDisplay items={approachItems} align="right" />}
       {displayState === "relay"    && <RelayDisplay    device={pendant} />}

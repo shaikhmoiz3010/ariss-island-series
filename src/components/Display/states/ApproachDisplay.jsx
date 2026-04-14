@@ -1,55 +1,63 @@
-export default function ApproachDisplay({ items, align = "left" }) {
+import { IC_ON_COLOUR } from "../../../constants/colours";
+
+const LABEL_TYPE = {
+  "Lights":  "dimmer",
+  "Night":   "scene",
+  "Fan":     "fan",
+  "Pendant": "relay",
+  "AC":      "ac",
+  "Curtain": "curtain",
+};
+
+function DotRow({ label, on }) {
+  const type     = LABEL_TYPE[label] ?? "dimmer";
+  const dotColor = IC_ON_COLOUR[type] ?? "#e8c87a";
+
   return (
-    <div style={{
-      display:        "flex",
-      flexDirection:  "column",
-      justifyContent: "space-around",
-      height:         "100%",
-      width:          "100%",
-      padding:        "5px 8px",
-      boxSizing:      "border-box",
-    }}>
-      {items.map(({ iconOff, iconOn, label, on }, i) => (
-        <div key={i} style={{
-          display:       "flex",
-          alignItems:    "center",
-          flexDirection: align === "right" ? "row-reverse" : "row",
-          gap:           "5px",
-          width:         "100%",
-        }}>
+    <div className="flex items-center gap-1.5">
+      <span
+        className="w-[7px] h-[7px] rounded-full flex-shrink-0 transition-all duration-300"
+        style={{
+          background: on ? dotColor : "rgba(160,160,160,0.40)",
+          boxShadow:  on ? `0 0 5px ${dotColor}88` : "none",
+        }}
+      />
+      <span className={`
+        font-mono text-[9.5px] tracking-[0.2px] whitespace-nowrap
+        transition-all duration-300
+        ${on ? "font-semibold text-white/90" : "font-normal text-white/35"}
+      `}>
+        {label}
+      </span>
+    </div>
+  );
+}
 
-          {/* icon — colourful when on, b&w when off */}
-          <img
-            src={on ? iconOn : iconOff}
-            alt={label}
-            style={{
-              width:      "13px",
-              height:     "13px",
-              flexShrink: 0,
-              objectFit:  "contain",
-              opacity:    on ? 1 : 0.45,
-              transition: "opacity 0.25s ease",
-            }}
-          />
-
-          {/* label */}
-          <span style={{
-            fontFamily:    "'JetBrains Mono', monospace",
-            fontSize:      "8.5px",
-            letterSpacing: "0.04em",
-            lineHeight:    1,
-            flex:          1,
-            color:         on ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.28)",
-            textAlign:     align === "right" ? "right" : "left",
-            transition:    "color 0.25s ease",
-          }}>
-            {label}
-          </span>
-
-
-
-        </div>
+/* ── LEFT list — adjust px/py/gap/margin here ── */
+export function ApproachLeft({ items }) {
+  return (
+    <div className="flex flex-col justify-center h-full px-[36px] py-1 gap-[1px]">
+      {items.map(({ label, on }, i) => (
+        <DotRow key={i} label={label} on={on} />
       ))}
     </div>
   );
+}
+
+/* ── RIGHT list — adjust px/py/gap/margin here ── */
+export function ApproachRight({ items }) {
+  return (
+    <div className="flex flex-col justify-center h-full px-[56px] py-1 gap-[1px]">
+      {items.map(({ label, on }, i) => (
+        <DotRow key={i} label={label} on={on} />
+      ))}
+    </div>
+  );
+}
+
+/* default export kept for backward compat */
+export default function ApproachDisplay({ items, align = "left" }) {
+  return align === "right"
+    ? <ApproachRight items={items} />
+    : <ApproachLeft  items={items} />;
 }

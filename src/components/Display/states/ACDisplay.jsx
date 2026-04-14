@@ -2,24 +2,10 @@ export default function ACDisplay({ device }) {
   const { on, temp, mode } = device;
 
   return (
-    <div style={{
-      display:        "flex",
-      flexDirection:  "column",
-      justifyContent: "center",
-      height:         "100%",
-      padding:        "1px 30px",
-      gap:            "0px",
-      boxSizing:      "border-box",
+    <div className="flex flex-col justify-center h-full px-9" style={{
     }}>
-
       {/* device name */}
-      <span className="mx-5" style={{
-
-        fontFamily:    "'JetBrains Mono', monospace",
-        fontSize:      "15px",
-        letterSpacing: "2.5px",
-        color:         "rgba(255,255,255,0.75)",
-        fontWeight:    700,
+      <span className="mx-2 font-sans text-white tracking-wider" style={{
       }}>
         AC
       </span>
@@ -28,11 +14,8 @@ export default function ACDisplay({ device }) {
       <div style={{ display:"flex", alignItems:"center", gap:"3px" }}>
 
         {/* ── toggle pill ── */}
-        <div style={{
-          position:     "relative",
-          width:        "45px",
-          height:       "19px",
-          borderRadius: "999px",
+        <div  className="relative w-[45px] h-[17px] rounded-full bg-[#ef4444]" style={{
+
           background:   on ? "#22c55e" : "#ef4444",
           flexShrink:   0,
           transition:   "background 0.28s ease",
