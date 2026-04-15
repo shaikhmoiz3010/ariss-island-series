@@ -25,7 +25,7 @@ function DotRow({ label, on }) {
       <span className={`
         font-mono text-[9.5px] tracking-[0.2px] whitespace-nowrap
         transition-all duration-300
-        ${on ? "font-semibold text-white/90" : "font-normal text-white/35"}
+        ${on ? "font-light text-white/90" : "font-normal text-white/35"}
       `}>
         {label}
       </span>

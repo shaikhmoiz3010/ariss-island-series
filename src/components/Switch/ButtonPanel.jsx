@@ -80,6 +80,22 @@ export default function ButtonPanel({ setLeftState, setRightState, onActivity, o
 
   // ── 4: Fan ─────────────────────────────────────────────────
   function tapFan() { toggleFan(4); setLeftState("fan"); activity(); }
+
+  function dblFan() {
+  /* double tap — cycle speed up, wraps back to 1 after max */
+  const cur = d(4);
+  if (!cur.on) {
+    toggleFan(4);
+    setFanSpeed(4, 1);
+  } else {
+    const next = cur.speed >= 4 ? 1 : cur.speed + 1;
+    setFanSpeed(4, next);
+  }
+  setLeftState("fan");
+  activity();
+}
+
+
   function holdFanStart() {
     if (!d(4).on) toggleFan(4);
     startHold(4, () => {
@@ -141,6 +157,7 @@ export default function ButtonPanel({ setLeftState, setRightState, onActivity, o
         onTapL={tapFan}        onHoldStartL={holdFanStart} onHoldEndL={holdFanEnd}
         onTapR={tapCurtain}    onDoubleTapR={dblCurtain}
         onHoldStartR={holdCurtainStart} onHoldEndR={holdCurtainEnd}
+        onDoubleTapL={dblFan}
       />
     </div>
   );
