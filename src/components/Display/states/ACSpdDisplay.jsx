@@ -22,8 +22,8 @@ export default function ACSpdDisplay({ device }) {
       alignItems:     "center",
       justifyContent: "center",
       height:         "100%",
-      padding:        "6px 12px",
-      gap:            "4px",
+      padding:        "6px 10px 5px 40px",
+      gap:            "3px",
       boxSizing:      "border-box",
     }}>
       {heights.map((h, i) => {

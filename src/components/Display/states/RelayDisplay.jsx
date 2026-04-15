@@ -14,12 +14,8 @@ export default function RelayDisplay({ device }) {
     }}>
 
       {/* device name */}
-      <span style={{
-        fontFamily:    "'JetBrains Mono', monospace",
-        fontSize:      "10px",
-        fontWeight:    600,
-        color:         "rgba(255,255,255,0.88)",
-        letterSpacing: "1.5px",
+      <span className="font-light font-sans text-[12px] text-white/88 tracking-widest" style={{
+
       }}>
         Switch
       </span>
@@ -47,7 +43,6 @@ export default function RelayDisplay({ device }) {
           right:         on ? "auto" : "6px",
           fontFamily:    "'JetBrains Mono', monospace",
           fontSize:      "6.5px",
-          fontWeight:    700,
           letterSpacing: "0.8px",
           color:         "rgba(255,255,255,0.92)",
           pointerEvents: "none",

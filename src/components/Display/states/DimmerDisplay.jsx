@@ -14,7 +14,7 @@ export default function DimmerDisplay({ device, mode = "bright" }) {
     <div className="gap-1 flex flex-col justify-start h-full mx-[30px] mt-2">
       <div className="flex items-center overflow-hidden whitespace-nowrap">
         {on
-          ? <span className="font-sans text-[14px] text-white/90 whitespace-nowrap">
+          ? <span className="font-sans font-light text-[14px] text-white ">
               {label}&nbsp;&nbsp;&nbsp;&nbsp;{bright}
               <span className="text-[14px] text-white ml-0.5">%</span>
             </span>

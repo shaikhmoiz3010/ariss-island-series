@@ -156,7 +156,7 @@ function HalfZone({ side, label, isOn, theme, onTap, onDoubleTap, onHoldStart, o
 
       {/* Label — sits in normal flow, always above canvas */}
       <span
-        className="m-5 text-gray-100 relative text-[10px] font-ui font-small tracking-wider"
+        className="m-5 text-gray-100 relative text-[10px] font-sans font-light tracking-wider"
         style={{
           zIndex:     10,
           // color:      pressed ? theme.labelPress : isOn ? theme.labelOn : theme.label,

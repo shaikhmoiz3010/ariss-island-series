@@ -8,7 +8,7 @@ export default function ACTempDisplay({ device }) {
       flexDirection:  "column",
       justifyContent: "center",
       height:         "100%",
-      padding:        "4px 12px",
+      padding:        "5px 0px 10px 40px",
       gap:            "6px",
       boxSizing:      "border-box",
     }}>
@@ -19,22 +19,17 @@ export default function ACTempDisplay({ device }) {
         alignItems:  "baseline",
         gap:         "10px",
       }}>
-        <span style={{
-          fontFamily:  "sans-serif",
-          fontSize:    "15px",
-          fontWeight:  400,
-          color:       on ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.28)",
+        <span className="-mx-1 font-light font-sans " style={{
+          fontSize:    "14px",
+          color:       on ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.18)",
           transition:  "color 0.25s ease",
-          whiteSpace:  "nowrap",
         }}>
           Temp. {temp}°C
         </span>
 
-        <span style={{
-          fontFamily:  "sans-serif",
-          fontSize:    "15px",
-          fontWeight:  400,
-          color:       on ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.28)",
+        <span className="font-sans font-light"  style={{
+          fontSize:    "14px",
+          color:       on ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.18)",
           transition:  "color 0.25s ease",
         }}>
           {on ? "On" : "Off"}
@@ -43,13 +38,13 @@ export default function ACTempDisplay({ device }) {
 
       {/* ── slider — only show when ON ── */}
       {on && (
-        <div style={{ position:"relative", height:"13px", display:"flex", alignItems:"center" }}>
+        <div className="w-[85px]" style={{ position:"relative", height:"13px", display:"flex", alignItems:"center" }}>
           {/* full track */}
           <div style={{
             position:     "absolute",
             left:         0,
             right:        0,
-            height:       "3px",
+            height:       "6px",
             borderRadius: "3px",
             background:   "rgba(255,255,255,0.85)",
           }}/>
@@ -58,8 +53,8 @@ export default function ACTempDisplay({ device }) {
             position:     "absolute",
             left:         `${pct}%`,
             transform:    "translateX(-50%)",
-            width:        "13px",
-            height:       "13px",
+            width:        "10px",
+            height:       "10px",
             borderRadius: "50%",
             background:   "#3b82f6",
             boxShadow:    "0 0 8px rgba(59,130,246,0.80)",
