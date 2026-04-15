@@ -63,8 +63,6 @@ export default function RoomLayout() {
 
   const {
     devices,
-    toggleDimmer, toggleRelay, toggleScene,
-    toggleFan, toggleAC, toggleCurtain, cycleACFanSpd,
   } = useDeviceStore();
 
   const lights  = devices.find(d => d.id === 0);
@@ -109,7 +107,7 @@ export default function RoomLayout() {
     c.scale(W / DW, H / DH);
 
     const WALL = 1;
-    const WX=WALL, WY=WALL, WW=DW-WALL*2, WH=DH-WALL;
+    const WX=WALL, WY=WALL, WW=DW+WALL*5, WH=DH-WALL;
 
     /* ── background image ── */
     c.save();
