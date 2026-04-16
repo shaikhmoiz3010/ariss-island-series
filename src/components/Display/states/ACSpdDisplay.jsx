@@ -1,5 +1,3 @@
-import { AC_SPEEDS } from "../../../constants/devices";
-
 const ACTIVE_BARS = { LOW: 1, MED: 2, HIGH: 3 };
 
 export default function ACSpdDisplay({ device }) {

@@ -1,4 +1,3 @@
-import StatusPill from "../../ui/StatusPill";
 import FanSteps from "../../ui/FanSteps";
 
 export default function FanDisplay({ device }) {

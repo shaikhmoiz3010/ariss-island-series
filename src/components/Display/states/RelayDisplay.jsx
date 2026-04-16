@@ -1,5 +1,5 @@
 export default function RelayDisplay({ device }) {
-  const { on, label } = device;
+  const { on } = device;
 
   return (
     <div className="flex flex-col justify-center items-start h-full pl-[75px] pr-0 py-[1px] gap-[2px] box-border">

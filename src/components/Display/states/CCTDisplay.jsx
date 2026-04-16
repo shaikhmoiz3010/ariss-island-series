@@ -1,6 +1,3 @@
-import StatusPill from "../../ui/StatusPill";
-
-
 export default function CCTDisplay({ device }) {
   const { cct } = device;
   const pct = ((cct - 2700) / 3800 * 82 + 9).toFixed(1);

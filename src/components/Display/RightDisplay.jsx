@@ -6,12 +6,6 @@ import ACTempDisplay  from "./states/ACTempDisplay";
 import ACSpdDisplay   from "./states/ACSpdDisplay";
 import CurtainDisplay from "./states/CurtainDisplay";
 
-import pendantOff  from "../../assets/icons/switchOff.png";
-import pendantOn   from "../../assets/icons/switchOn.png";
-import acOff       from "../../assets/icons/acOff.png";
-import acOn        from "../../assets/icons/acOn.png";
-import curtainOff  from "../../assets/icons/curtainOff.png";
-import curtainOn   from "../../assets/icons/curtainOn.png";
 
 export default function RightDisplay({ displayState, devices }) {
   const pendant = devices.find((d) => d.id === 1);
