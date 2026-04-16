@@ -33,7 +33,9 @@ const approachItems = [
       {displayState === "ac"       && <ACDisplay       device={ac}      />}
       {displayState === "ac-temp"  && <ACTempDisplay   device={ac}      />}
       {displayState === "ac-spd"   && <ACSpdDisplay    device={ac}      />}
-      {displayState === "curt"     && <CurtainDisplay  device={curtain} />}
+      {displayState === "curt"       && <CurtainDisplay device={curtain} variant="status" />}
+      {displayState === "curt-move"  && <CurtainDisplay device={curtain} variant="move"   />}
+      {displayState === "curt-pause" && <CurtainDisplay device={curtain} variant="pause"  />}
     </div>
   );
 }

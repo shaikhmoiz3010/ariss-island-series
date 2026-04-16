@@ -108,21 +108,35 @@ export default function ButtonPanel({ setLeftState, setRightState, onActivity, o
   function holdFanEnd() { stopHold(4); setLeftState("fan"); }
 
   // ── 5: Curtain ─────────────────────────────────────────────
-  function tapCurtain() { toggleCurtain(5); setRightState("curt"); activity(); }
-  function dblCurtain() { toggleCurtain(5); setRightState("curt"); activity(); }
-  function holdCurtainStart() {
-    let dir = d(5).pos >= 80 ? -1 : 1;
-    startHold(5, () => {
-      const cur = useDeviceStore.getState().devices.find((x) => x.id === 5);
-      let next = Math.max(0, Math.min(100, cur.pos + dir * 1.5));
-      if (next >= 100 || next <= 0) dir *= -1;
-      setCurtainPos(5, next);
-    }, 60);
-    setRightState("curt");
-    activity();
-  }
-  function holdCurtainEnd() { stopHold(5); setRightState("curt"); }
+function tapCurtain() {
+  toggleCurtain(5);
+  /* show move display if curtain is now moving, status if stopped */
+  setRightState(d(5).moving ? "curt" : "curt-move");
+  activity();
+}
 
+function dblCurtain() {
+  toggleCurtain(5);
+  setRightState("curt-pause");    /* pause icon + slider */
+  activity();
+}
+
+function holdCurtainStart() {
+  let dir = d(5).pos >= 80 ? -1 : 1;
+  startHold(5, () => {
+    const cur = useDeviceStore.getState().devices.find((x) => x.id === 5);
+    let next = Math.max(0, Math.min(100, cur.pos + dir * 1.5));
+    if (next >= 100 || next <= 0) dir *= -1;
+    setCurtainPos(5, next);
+  }, 60);
+  setRightState("curt-move");     /* animated slider */
+  activity();
+}
+
+function holdCurtainEnd() {
+  stopHold(5);
+  setRightState("curt-move");
+}
   return (
     <div className="py-[5px] flex flex-col gap-0">
       {/* Row 1 — Lights | Switch */}

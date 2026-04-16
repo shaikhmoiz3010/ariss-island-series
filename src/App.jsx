@@ -5,7 +5,7 @@ import BgToggle from "./components/ThemePicker/BgToggle";
 import { useThemeStore } from "./state/useThemeStore";
 import RoomLayout from "./components/RoomLayout/RoomLayout";
 import { HOUSING_THEMES, BUTTON_THEMES } from "./constants/themes";
-import switchBg from "../src/assets/bg1.jpg";
+import switchBg from "../src/assets/bg3.png";
 
 export default function App() {
   const bgMode = useThemeStore((s) => s.bgMode);
