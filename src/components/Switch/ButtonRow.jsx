@@ -3,8 +3,7 @@ import { usePointer } from "../../hooks/usePointer";
 
 const LIGHT_BUTTON_IDS = ["white", "silver", "mint"];
 
-
-// ─── Luminance helper — auto-detect if a colour is light or dark ─────────────
+// ─── Luminance helper ─────────────────────────────────────────────────────────
 function rgbStrToLuminance(rgbStr) {
   const parts = rgbStr.split(",").map(Number);
   if (parts.length < 3) return 0;
@@ -15,7 +14,7 @@ function rgbStrToLuminance(rgbStr) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-// ─── Theme definitions ───────────────────────────────────────────────────────
+// ─── Theme helpers ────────────────────────────────────────────────────────────
 function hexToRgbStr(hex) {
   const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return r
@@ -47,15 +46,14 @@ const PRESETS = {
 };
 
 function resolveTheme(buttonTheme) {
-  if (!buttonTheme)               return PRESETS.green;
+  if (!buttonTheme)            return PRESETS.green;
   if (PRESETS[buttonTheme.id]) return PRESETS[buttonTheme.id];
 
   const topRgb = hexToRgbStr(buttonTheme.top ?? "#5c8a6e");
   const midRgb = hexToRgbStr(buttonTheme.mid ?? "#4d7860");
   const botRgb = hexToRgbStr(buttonTheme.bot ?? "#3d6350");
 
-  // Auto-detect lightness via relative luminance — don't rely only on id list
-  const lum = rgbStrToLuminance(midRgb);
+  const lum     = rgbStrToLuminance(midRgb);
   const isLight = LIGHT_BUTTON_IDS.includes(buttonTheme.id) || lum > 0.25;
 
   return {
@@ -63,7 +61,6 @@ function resolveTheme(buttonTheme) {
     mid:     midRgb,
     dark:    botRgb,
     rim:     buttonTheme.bot ?? "#3d6350",
-    // Guaranteed contrast: white on dark, near-black on light
     label:      isLight ? "rgba(10,20,30,0.18)"  : "rgba(255,255,255,0.88)",
     labelOn:    isLight ? "rgba(5,12,20,1.0)"    : "rgba(255,255,255,1.0)",
     labelPress: isLight ? "rgba(10,20,30,0.35)"  : "rgba(255,255,255,0.40)",
@@ -73,7 +70,7 @@ function resolveTheme(buttonTheme) {
   };
 }
 
-// ─── Canvas component ────────────────────────────────────────────────────────
+// ─── Canvas component ─────────────────────────────────────────────────────────
 function AlumCanvas({ theme }) {
   const ref = useRef(null);
   useEffect(() => {
@@ -86,13 +83,12 @@ function AlumCanvas({ theme }) {
   return (
     <canvas
       ref={ref}
-      className="absolute inset-0 pointer-events-none"
-      style={{ width: "100%", height: "100%", zIndex: 1 }}
+      className="absolute inset-0 pointer-events-none w-full h-full z-[1]"
     />
   );
 }
 
-// ─── HalfZone ────────────────────────────────────────────────────────────────
+// ─── HalfZone ─────────────────────────────────────────────────────────────────
 function HalfZone({ side, label, isOn, theme, onTap, onDoubleTap, onHoldStart, onHoldStartRight, onHoldEnd }) {
   const [pressed, setPressed] = useState(false);
   const [ripples, setRipples] = useState([]);
@@ -131,12 +127,10 @@ function HalfZone({ side, label, isOn, theme, onTap, onDoubleTap, onHoldStart, o
       onPointerCancel={() => { handleUp();   onPointerCancel(); }}
       className={`
         flex-1 relative overflow-hidden flex flex-col justify-center
-        px-5 cursor-pointer select-none touch-none
+        px-5 cursor-pointer select-none touch-none z-[2]
         ${side === "r" ? "items-end" : "items-start"}
       `}
       style={{
-        // zIndex 2 puts this above the canvas (1) so labels are always visible
-        zIndex: 2,
         transform:  pressed ? "translateY(1.5px) scaleY(0.985)" : "translateY(0) scaleY(1)",
         filter:     pressed ? "brightness(0.80)" : "brightness(1)",
         transition: pressed
@@ -144,24 +138,19 @@ function HalfZone({ side, label, isOn, theme, onTap, onDoubleTap, onHoldStart, o
           : "transform 150ms ease-out, filter 150ms ease-out",
       }}
     >
-
       {/* Ripples */}
       {ripples.map((r) => (
         <span
           key={r.id}
-          className="absolute w-2 h-2 rounded-full pointer-events-none animate-rippleOut"
-          style={{ left: r.x - 4, top: r.y - 4, background: theme.ripple, zIndex: 3 }}
+          className="absolute w-2 h-2 rounded-full pointer-events-none animate-rippleOut z-[3]"
+          style={{ left: r.x - 4, top: r.y - 4, background: theme.ripple }}
         />
       ))}
 
-      {/* Label — sits in normal flow, always above canvas */}
+      {/* Label */}
       <span
-        className="m-5 text-gray-100 relative text-[10px] font-sans font-light tracking-wider"
-        style={{
-          zIndex:     10,
-          // color:      pressed ? theme.labelPress : isOn ? theme.labelOn : theme.label,
-          transition: "color 150ms",
-        }}
+        className="m-5 text-gray-100 relative text-[10px] font-sans font-light tracking-wider z-[10]"
+        style={{ transition: "color 150ms" }}
       >
         {label}
       </span>
@@ -169,7 +158,7 @@ function HalfZone({ side, label, isOn, theme, onTap, onDoubleTap, onHoldStart, o
   );
 }
 
-// ─── ButtonRow ───────────────────────────────────────────────────────────────
+// ─── ButtonRow ────────────────────────────────────────────────────────────────
 export default function ButtonRow({
   labelL, labelR, onL, onR, isFirst, isLast,
   buttonTheme,
@@ -180,7 +169,7 @@ export default function ButtonRow({
   const theme = resolveTheme(buttonTheme);
 
   const borderRadius = isFirst ? "25px 25px 1px 1px"
-    : isLast ? "1px 1px 25px 25px"
+    : isLast  ? "1px 1px 25px 25px"
     : "1px";
 
   return (
@@ -194,7 +183,7 @@ export default function ButtonRow({
       `}</style>
 
       <div
-        className="mx-1 flex h-[86px] relative overflow-hidden"
+        className="mx-1 flex h-[86px] relative overflow-hidden transition-all duration-[350ms] ease-in-out"
         style={{
           borderRadius,
           background: theme.rim,
@@ -205,13 +194,8 @@ export default function ButtonRow({
             0 0px 3px rgba(0,0,0,0.35),
             0 8px 24px rgba(0,0,0,0.20)
           `,
-          transition: "all 350ms ease",
         }}
       >
-
-
-
-
         <HalfZone
           side="l" label={labelL} isOn={onL} theme={theme}
           onTap={onTapL}     onDoubleTap={onDoubleTapL}

@@ -3,64 +3,36 @@ export default function ACTempDisplay({ device }) {
   const pct = ((temp - 16) / (30 - 16) * 100).toFixed(1);
 
   return (
-    <div style={{
-      display:        "flex",
-      flexDirection:  "column",
-      justifyContent: "center",
-      height:         "100%",
-      padding:        "5px 0px 10px 40px",
-      gap:            "6px",
-      boxSizing:      "border-box",
-    }}>
+    <div className="flex flex-col justify-center h-full pt-[5px] pb-[10px] pl-[40px] pr-0 gap-[6px] box-border">
 
       {/* ── Temp value + On/Off label in one row ── */}
-      <div style={{
-        display:     "flex",
-        alignItems:  "baseline",
-        gap:         "10px",
-      }}>
-        <span className="-mx-1 font-light font-sans " style={{
-          fontSize:    "14px",
-          color:       on ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.18)",
-          transition:  "color 0.25s ease",
-        }}>
+      <div className="flex items-baseline gap-[10px]">
+        <span
+          className="-mx-1 font-light font-sans text-[14px] transition-colors duration-[250ms] ease-in-out"
+          style={{ color: on ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.18)" }}
+        >
           Temp. {temp}°C
         </span>
 
-        <span className="font-sans font-light"  style={{
-          fontSize:    "14px",
-          color:       on ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.18)",
-          transition:  "color 0.25s ease",
-        }}>
+        <span
+          className="font-sans font-light text-[14px] transition-colors duration-[250ms] ease-in-out"
+          style={{ color: on ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.18)" }}
+        >
           {on ? "On" : "Off"}
         </span>
       </div>
 
       {/* ── slider — only show when ON ── */}
       {on && (
-        <div className="w-[85px]" style={{ position:"relative", height:"13px", display:"flex", alignItems:"center" }}>
+        <div className="w-[85px] relative h-[13px] flex items-center">
           {/* full track */}
-          <div style={{
-            position:     "absolute",
-            left:         0,
-            right:        0,
-            height:       "6px",
-            borderRadius: "3px",
-            background:   "rgba(255,255,255,0.85)",
-          }}/>
+          <div className="absolute left-0 right-0 h-[6px] rounded-[3px] bg-white/[0.85]" />
+
           {/* blue dot thumb */}
-          <div style={{
-            position:     "absolute",
-            left:         `${pct}%`,
-            transform:    "translateX(-50%)",
-            width:        "10px",
-            height:       "10px",
-            borderRadius: "50%",
-            background:   "#3b82f6",
-            boxShadow:    "0 0 8px rgba(59,130,246,0.80)",
-            transition:   "left 0.2s ease",
-            flexShrink:   0,
-          }}/>
+          <div
+            className="absolute w-[10px] h-[10px] rounded-full bg-blue-500 flex-shrink-0 transition-[left] duration-200 ease-in-out shadow-[0_0_8px_rgba(59,130,246,0.80)] -translate-x-1/2"
+            style={{ left: `${pct}%` }}
+          />
         </div>
       )}
 

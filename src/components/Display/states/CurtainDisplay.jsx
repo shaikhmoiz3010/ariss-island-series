@@ -23,11 +23,11 @@ export default function CurtainDisplay({ device, variant = "status" }) {
     <div className="flex flex-col justify-center h-full px-3 py-1 box-border">
 
       {/* label row */}
-      <div className="mx-4 flex items-baseline gap-[20px]">
-        <span className="font-sans font-light text-[15px] text-white whitespace-nowrap">
+      <div className="mx-6 flex items-baseline gap-[15px]">
+        <span className="font-sans font-light text-[14px] text-white whitespace-nowrap">
           {pct}%
         </span>
-        <span className="font-sans font-light text-[15px] text-white">
+        <span className="font-sans font-light text-[14px] text-white">
           {moving
             ? (dir === "open" ? "Opening" : "Closing")
             : isOpen   ? "Open"
@@ -39,7 +39,7 @@ export default function CurtainDisplay({ device, variant = "status" }) {
 
       {/* track wrapper — fill is clipped inside this */}
       <div
-        className="mx-3 mt-1 relative h-[8px] w-[100px] rounded-2xl overflow-hidden transition-[background] duration-300 ease-in-out"
+        className="mx-6 mt-1 relative h-[8px] w-[95px] rounded-2xl overflow-hidden transition-[background] duration-300 ease-in-out"
         style={{
           background: isOpen
             ? "rgba(255,255,255,0.88)"

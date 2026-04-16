@@ -19,7 +19,7 @@ export default function App() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col transition-all duration-700 relative overflow-hidden`}
+      className="min-h-screen flex flex-col transition-all duration-700 relative overflow-hidden"
       style={{
         background: isDark
           ? "linear-gradient(135deg, #0a0a0f 0%, #0f0f1a 30%, #0d1117 60%, #080c10 100%)"
@@ -27,18 +27,11 @@ export default function App() {
       }}
     >
       {/* ── Ambient gradient orbs ── */}
-      <div
-        className="pointer-events-none fixed inset-0 z-0"
-        aria-hidden="true"
-      >
+      <div className="pointer-events-none fixed inset-0 z-0" aria-hidden="true">
         {/* top-left orb */}
         <div
-          className="absolute rounded-full blur-[120px] transition-all duration-700"
+          className="absolute rounded-full blur-[120px] transition-all duration-700 w-[520px] h-[520px] -top-[180px] -left-[160px]"
           style={{
-            width: 520,
-            height: 520,
-            top: -180,
-            left: -160,
             background: isDark
               ? "radial-gradient(circle, rgba(139,92,246,0.18) 0%, transparent 70%)"
               : "radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 70%)",
@@ -46,12 +39,8 @@ export default function App() {
         />
         {/* bottom-right orb */}
         <div
-          className="absolute rounded-full blur-[140px] transition-all duration-700"
+          className="absolute rounded-full blur-[140px] transition-all duration-700 w-[600px] h-[600px] -bottom-[200px] -right-[180px]"
           style={{
-            width: 600,
-            height: 600,
-            bottom: -200,
-            right: -180,
             background: isDark
               ? "radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%)"
               : "radial-gradient(circle, rgba(251,191,36,0.16) 0%, transparent 70%)",
@@ -59,13 +48,8 @@ export default function App() {
         />
         {/* centre accent */}
         <div
-          className="absolute rounded-full blur-[180px] transition-all duration-700"
+          className="absolute rounded-full blur-[180px] transition-all duration-700 w-[400px] h-[400px] top-[40%] left-[45%] -translate-x-1/2 -translate-y-1/2"
           style={{
-            width: 400,
-            height: 400,
-            top: "40%",
-            left: "45%",
-            transform: "translate(-50%,-50%)",
             background: isDark
               ? "radial-gradient(circle, rgba(56,189,248,0.07) 0%, transparent 70%)"
               : "radial-gradient(circle, rgba(56,189,248,0.09) 0%, transparent 70%)",
@@ -100,14 +84,12 @@ export default function App() {
 
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 h-full flex items-center justify-between relative">
           {/* ── brand ── */}
-          <div className="flex items-center gap-2.6">
-            <span
-              className="text-orange-500 font-mono text-sm sm:text-base tracking-[0.18em] uppercase font-semibold"
-            >
+          <div className="flex items-center">
+            <span className="text-orange-500 font-mono text-sm sm:text-base tracking-[0.18em] uppercase font-semibold">
               ARISS
             </span>
             <span
-              className="mx-3 hidden sm:inline font-sans text-[13px] tracking-[3px] transition-colors duration-400"
+              className="mx-3 hidden sm:inline font-sans text-[13px] tracking-[3px] transition-colors duration-300"
               style={{ color: isDark ? "rgba(255,255,255,0.55)" : "rgba(30,30,60,0.55)" }}
             >
               Island Series
@@ -127,10 +109,8 @@ export default function App() {
             <div className="relative sm:hidden">
               <button
                 onClick={() => { setBodyOpen(o => !o); setSwitchOpen(false); }}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border cursor-pointer transition-all duration-200 active:scale-95"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border cursor-pointer transition-all duration-200 active:scale-95 backdrop-blur-md"
                 style={{
-                  backdropFilter: "blur(12px)",
-                  WebkitBackdropFilter: "blur(12px)",
                   background: bodyOpen
                     ? isDark ? "rgba(99,102,241,0.22)" : "rgba(99,102,241,0.14)"
                     : isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.55)",
@@ -143,12 +123,8 @@ export default function App() {
                 }}
               >
                 <div
-                  className="w-3 h-3 rounded-sm flex-shrink-0"
-                  style={{
-                    background: HOUSING_THEMES.find(t => t.id === housingId)?.swatch ?? "#fff",
-                    border: "1px solid rgba(0,0,0,0.15)",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                  }}
+                  className="w-3 h-3 rounded-sm flex-shrink-0 border border-black/15 shadow-sm"
+                  style={{ background: HOUSING_THEMES.find(t => t.id === housingId)?.swatch ?? "#fff" }}
                 />
                 <span
                   className="font-mono text-[9px] tracking-[1.2px] uppercase font-medium"
@@ -169,7 +145,7 @@ export default function App() {
                 <>
                   <div className="fixed inset-0 z-40" onClick={closeAll}/>
                   <div
-                    className="absolute top-[calc(100%+8px)] right-0 z-50 w-[200px] p-3.5 rounded-2xl border shadow-2xl animate-[dropIn_0.16s_ease_forwards]"
+                    className="absolute top-[calc(100%+8px)] right-0 z-50 w-[200px] p-3.5 rounded-2xl border shadow-2xl animate-[dropIn_0.16s_ease_forwards] backdrop-blur-2xl"
                     style={{
                       backdropFilter: "blur(32px) saturate(200%)",
                       WebkitBackdropFilter: "blur(32px) saturate(200%)",
@@ -187,14 +163,11 @@ export default function App() {
                       style={{ borderBottom: isDark ? "1px solid rgba(255,255,255,0.07)" : "1px solid rgba(99,102,241,0.12)" }}
                     >
                       <span
-                        className="font-mono text-[12px] tracking-[2.5px] uppercase font-semibold"
+                        className="font-mono text-[12px] tracking-[2.5px] uppercase font-semibold bg-clip-text text-transparent"
                         style={{
-                          background: isDark
+                          backgroundImage: isDark
                             ? "linear-gradient(90deg, #fbbf24, #f97316)"
                             : "linear-gradient(90deg, #7c3aed, #4f46e5)",
-                          WebkitBackgroundClip: "text",
-                          WebkitTextFillColor: "transparent",
-                          backgroundClip: "text",
                         }}
                       >
                         Body Colour
@@ -238,8 +211,10 @@ export default function App() {
                       ))}
                     </div>
 
-                    <p className="mt-2.5 font-mono text-[8px] tracking-[1.5px] uppercase text-center"
-                      style={{ color: isDark ? "rgba(255,255,255,0.3)" : "rgba(30,30,60,0.3)" }}>
+                    <p
+                      className="mt-2.5 font-mono text-[8px] tracking-[1.5px] uppercase text-center"
+                      style={{ color: isDark ? "rgba(255,255,255,0.3)" : "rgba(30,30,60,0.3)" }}
+                    >
                       {HOUSING_THEMES.find(t => t.id === housingId)?.label ?? "—"}
                     </p>
                   </div>
@@ -251,10 +226,8 @@ export default function App() {
             <div className="relative sm:hidden">
               <button
                 onClick={() => { setSwitchOpen(o => !o); setBodyOpen(false); }}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border cursor-pointer transition-all duration-200 active:scale-95"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border cursor-pointer transition-all duration-200 active:scale-95 backdrop-blur-md"
                 style={{
-                  backdropFilter: "blur(12px)",
-                  WebkitBackdropFilter: "blur(12px)",
                   background: switchOpen
                     ? isDark ? "rgba(245,158,11,0.15)" : "rgba(245,158,11,0.12)"
                     : isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.5)",
@@ -267,12 +240,8 @@ export default function App() {
                 }}
               >
                 <div
-                  className="w-3 h-3 rounded-sm flex-shrink-0"
-                  style={{
-                    background: BUTTON_THEMES.find(t => t.id === buttonId)?.swatch ?? "#5c8a6e",
-                    border: "1px solid rgba(0,0,0,0.15)",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                  }}
+                  className="w-3 h-3 rounded-sm flex-shrink-0 border border-black/15 shadow-sm"
+                  style={{ background: BUTTON_THEMES.find(t => t.id === buttonId)?.swatch ?? "#5c8a6e" }}
                 />
                 <span
                   className="font-mono text-[9px] tracking-[1.2px] uppercase font-medium"
@@ -293,7 +262,7 @@ export default function App() {
                 <>
                   <div className="fixed inset-0 z-40" onClick={closeAll}/>
                   <div
-                    className="absolute top-[calc(100%+8px)] right-0 z-50 w-[200px] p-3.5 rounded-2xl border shadow-2xl animate-[dropIn_0.16s_ease_forwards]"
+                    className="absolute top-[calc(100%+8px)] right-0 z-50 w-[200px] p-3.5 rounded-2xl border shadow-2xl animate-[dropIn_0.16s_ease_forwards] backdrop-blur-2xl"
                     style={{
                       backdropFilter: "blur(32px) saturate(200%)",
                       WebkitBackdropFilter: "blur(32px) saturate(200%)",
@@ -311,14 +280,11 @@ export default function App() {
                       style={{ borderBottom: isDark ? "1px solid rgba(255,255,255,0.07)" : "1px solid rgba(99,102,241,0.12)" }}
                     >
                       <span
-                        className="font-mono text-[8px] tracking-[2.5px] uppercase font-semibold"
+                        className="font-mono text-[8px] tracking-[2.5px] uppercase font-semibold bg-clip-text text-transparent"
                         style={{
-                          background: isDark
+                          backgroundImage: isDark
                             ? "linear-gradient(90deg, #fbbf24, #f97316)"
                             : "linear-gradient(90deg, #7c3aed, #4f46e5)",
-                          WebkitBackgroundClip: "text",
-                          WebkitTextFillColor: "transparent",
-                          backgroundClip: "text",
                         }}
                       >
                         Button Colour
@@ -362,8 +328,10 @@ export default function App() {
                       ))}
                     </div>
 
-                    <p className="mt-2.5 font-mono text-[8px] tracking-[1.5px] uppercase text-center"
-                      style={{ color: isDark ? "rgba(255,255,255,0.3)" : "rgba(30,30,60,0.3)" }}>
+                    <p
+                      className="mt-2.5 font-mono text-[8px] tracking-[1.5px] uppercase text-center"
+                      style={{ color: isDark ? "rgba(255,255,255,0.3)" : "rgba(30,30,60,0.3)" }}
+                    >
                       {BUTTON_THEMES.find(t => t.id === buttonId)?.label ?? "—"}
                     </p>
                   </div>
@@ -380,26 +348,22 @@ export default function App() {
           <div className="flex flex-col sm:flex-row items-center sm:items-stretch gap-4 sm:gap-6 lg:gap-8 w-full flex-1">
 
             {/* switch panel — glass card */}
-{/* switch panel — glass card */}
-<div
-  className="flex-shrink-0 w-full sm:w-auto flex justify-center sm:justify-start rounded-2xl p-1 transition-all duration-500"
-  style={{
-    backdropFilter: "blur(20px) saturate(160%)",
-    WebkitBackdropFilter: "blur(20px) saturate(160%)",
-    backgroundImage: `url(${switchBg})`,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    backgroundRepeat: "no-repeat",
-    border: isDark
-      ? "1px solid rgba(255,255,255,0.08)"
-      : "1px solid rgba(99,102,241,0.15)",
-    boxShadow: isDark
-      ? "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)"
-      : "0 8px 32px rgba(99,102,241,0.1), inset 0 1px 0 rgba(255,255,255,0.95)",
-  }}
->
-  <SwitchPanel />
-</div>
+            <div
+              className="flex-shrink-0 w-full sm:w-auto flex justify-center sm:justify-start rounded-2xl p-1 transition-all duration-500 bg-cover bg-center bg-no-repeat"
+              style={{
+                backdropFilter: "blur(20px) saturate(160%)",
+                WebkitBackdropFilter: "blur(20px) saturate(160%)",
+                backgroundImage: `url(${switchBg})`,
+                border: isDark
+                  ? "1px solid rgba(255,255,255,0.08)"
+                  : "1px solid rgba(99,102,241,0.15)",
+                boxShadow: isDark
+                  ? "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)"
+                  : "0 8px 32px rgba(99,102,241,0.1), inset 0 1px 0 rgba(255,255,255,0.95)",
+              }}
+            >
+              <SwitchPanel />
+            </div>
 
             {/* room layout — glass card */}
             <div

@@ -2,69 +2,40 @@ export default function RelayDisplay({ device }) {
   const { on, label } = device;
 
   return (
-    <div style={{
-      display:        "flex",
-      flexDirection:  "column",
-      justifyContent: "center",
-      alignItems:     "flex-start",
-      height:         "100%",
-      padding:        "1px 0px 0 75px",
-      gap:            "2px",
-      boxSizing:      "border-box",
-    }}>
+    <div className="flex flex-col justify-center items-start h-full pl-[75px] pr-0 py-[1px] gap-[2px] box-border">
 
       {/* device name */}
-      <span className="font-light font-sans text-[12px] text-white/88 tracking-widest" style={{
-
-      }}>
+      <span className="font-light font-sans text-[12px] text-white/[0.88] tracking-widest">
         Switch
       </span>
 
       {/* sliding toggle pill */}
-      <div style={{
-        position:     "relative",
-        width:        "46px",
-        height:       "20px",
-        borderRadius: "999px",
-        background:   on ? "#22c55e" : "#ef4444",
-        flexShrink:   0,
-        transition:   "background 0.28s ease",
-        boxShadow:    on
-          ? "0 0 8px rgba(34,197,94,0.45)"
-          : "0 0 8px rgba(239,68,68,0.40)",
-      }}>
-
+      <div
+        className="relative w-[46px] h-[20px] rounded-full flex-shrink-0 transition-[background] duration-[280ms] ease-in-out"
+        style={{
+          background: on ? "#22c55e" : "#ef4444",
+          boxShadow:  on
+            ? "0 0 8px rgba(34,197,94,0.45)"
+            : "0 0 8px rgba(239,68,68,0.40)",
+        }}
+      >
         {/* ON / OFF label */}
-        <span style={{
-          position:      "absolute",
-          top:           "50%",
-          transform:     "translateY(-50%)",
-          left:          on ? "6px"  : "auto",
-          right:         on ? "auto" : "6px",
-          fontFamily:    "'JetBrains Mono', monospace",
-          fontSize:      "6.5px",
-          letterSpacing: "0.8px",
-          color:         "rgba(255,255,255,0.92)",
-          pointerEvents: "none",
-          userSelect:    "none",
-          transition:    "all 0.28s ease",
-        }}>
+        <span
+          className="absolute top-1/2 -translate-y-1/2 font-mono text-[6.5px] tracking-[0.8px] text-white/[0.92] pointer-events-none select-none transition-all duration-[280ms] ease-in-out"
+          style={{
+            left:  on ? "6px"  : "auto",
+            right: on ? "auto" : "6px",
+            fontFamily: "'JetBrains Mono', monospace",
+          }}
+        >
           {on ? "ON" : "OFF"}
         </span>
 
         {/* sliding knob */}
-        <div style={{
-          position:     "absolute",
-          top:          "2px",
-          left:         on ? "calc(100% - 18px)" : "2px",
-          width:        "16px",
-          height:       "16px",
-          borderRadius: "50%",
-          background:   "rgba(255,255,255,0.96)",
-          boxShadow:    "0 1px 4px rgba(0,0,0,0.35)",
-          transition:   "left 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
-        }}/>
-
+        <div
+          className="absolute top-[2px] w-[16px] h-[16px] rounded-full bg-white/[0.96] shadow-[0_1px_4px_rgba(0,0,0,0.35)] transition-[left] duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+          style={{ left: on ? "calc(100% - 18px)" : "2px" }}
+        />
       </div>
     </div>
   );
