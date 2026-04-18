@@ -367,7 +367,7 @@ export default function App() {
 
             {/* room layout — glass card */}
             <div
-              className="flex-1 w-full min-h-[260px] sm:h-full md:h-full rounded-2xl overflow-hidden transition-all duration-500"
+              className="flex-1 w-full h-full sm:h-full md:h-full rounded-2xl overflow-hidden transition-all duration-500"
               style={{
                 backdropFilter: "blur(20px) saturate(160%)",
                 WebkitBackdropFilter: "blur(20px) saturate(160%)",
