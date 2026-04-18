@@ -1,4 +1,3 @@
-
 export default function SceneDisplay({ device }) {
   return (
     <div className="flex flex-col justify-between h-full p-2.5 px-8">

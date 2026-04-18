@@ -12,7 +12,7 @@ export default function App() {
   const { housingId, buttonId, setHousing, setButton } = useThemeStore();
   const isDark = bgMode === "dark";
 
-  const [bodyOpen,   setBodyOpen]   = useState(false);
+  const [bodyOpen, setBodyOpen] = useState(false);
   const [switchOpen, setSwitchOpen] = useState(false);
 
   const closeAll = () => { setBodyOpen(false); setSwitchOpen(false); };
@@ -137,13 +137,13 @@ export default function App() {
                   className={`transition-transform duration-200 ${bodyOpen ? "rotate-180" : ""}`}
                   style={{ stroke: isDark ? "rgba(255,255,255,0.45)" : "rgba(30,30,60,0.45)" }}
                 >
-                  <polyline points="6 9 12 15 18 9"/>
+                  <polyline points="6 9 12 15 18 9" />
                 </svg>
               </button>
 
               {bodyOpen && (
                 <>
-                  <div className="fixed inset-0 z-40" onClick={closeAll}/>
+                  <div className="fixed inset-0 z-40" onClick={closeAll} />
                   <div
                     className="absolute top-[calc(100%+8px)] right-0 z-50 w-[200px] p-3.5 rounded-2xl border shadow-2xl animate-[dropIn_0.16s_ease_forwards] backdrop-blur-2xl"
                     style={{
@@ -179,7 +179,7 @@ export default function App() {
                       >
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round"
                           style={{ stroke: isDark ? "rgba(255,255,255,0.5)" : "rgba(30,30,60,0.5)" }}>
-                          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                         </svg>
                       </button>
                     </div>
@@ -203,7 +203,7 @@ export default function App() {
                             <span className="absolute inset-0 flex items-center justify-center">
                               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
                                 style={{ stroke: t.id === "black" ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.6)" }}>
-                                <polyline points="20 6 9 17 4 12"/>
+                                <polyline points="20 6 9 17 4 12" />
                               </svg>
                             </span>
                           )}
@@ -254,13 +254,13 @@ export default function App() {
                   className={`transition-transform duration-200 ${switchOpen ? "rotate-180" : ""}`}
                   style={{ stroke: isDark ? "rgba(255,255,255,0.38)" : "rgba(30,30,60,0.38)" }}
                 >
-                  <polyline points="6 9 12 15 18 9"/>
+                  <polyline points="6 9 12 15 18 9" />
                 </svg>
               </button>
 
               {switchOpen && (
                 <>
-                  <div className="fixed inset-0 z-40" onClick={closeAll}/>
+                  <div className="fixed inset-0 z-40" onClick={closeAll} />
                   <div
                     className="absolute top-[calc(100%+8px)] right-0 z-50 w-[200px] p-3.5 rounded-2xl border shadow-2xl animate-[dropIn_0.16s_ease_forwards] backdrop-blur-2xl"
                     style={{
@@ -296,7 +296,7 @@ export default function App() {
                       >
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round"
                           style={{ stroke: isDark ? "rgba(255,255,255,0.5)" : "rgba(30,30,60,0.5)" }}>
-                          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                         </svg>
                       </button>
                     </div>
@@ -320,7 +320,7 @@ export default function App() {
                             <span className="absolute inset-0 flex items-center justify-center">
                               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
                                 style={{ stroke: t.id === "white" || t.id === "silver" ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.85)" }}>
-                                <polyline points="20 6 9 17 4 12"/>
+                                <polyline points="20 6 9 17 4 12" />
                               </svg>
                             </span>
                           )}
@@ -344,19 +344,19 @@ export default function App() {
 
       {/* ══ MAIN ══ */}
       <main className="relative z-10 flex-1 flex flex-col items-center px-3 sm:px-4 lg:px-6 py-5 sm:py-8 gap-5 sm:gap-8">
-        <div className="w-full max-w-[1200px] flex-1 flex flex-col">
-          <div className="flex flex-col sm:flex-row items-center sm:items-stretch gap-4 sm:gap-6 lg:gap-8 w-full flex-1">
+        <div className="w-full   max-w-[1200px] flex-1 flex flex-col">
+          <div className="flex flex-col-reverse sm:flex-row items-center sm:items-stretch gap-4 sm:gap-6 lg:gap-8 w-full flex-1">
 
             {/* switch panel — glass card */}
+            {/* switch panel — glass card */}
             <div
-              className="flex-shrink-0 w-full sm:w-auto flex justify-center sm:justify-start rounded-2xl p-1 transition-all duration-500 bg-cover bg-center bg-no-repeat"
+              className="flex-shrink-0 w-full h-full sm:w-auto flex justify-center sm:justify-start rounded-2xl p-1 transition-all duration-500"
               style={{
                 backdropFilter: "blur(20px) saturate(160%)",
                 WebkitBackdropFilter: "blur(20px) saturate(160%)",
-                backgroundImage: `url(${switchBg})`,
                 border: isDark
                   ? "1px solid rgba(255,255,255,0.08)"
-                  : "1px solid rgba(99,102,241,0.15)",
+                  : "2px solid rgba(99,102,241,0.15)",
                 boxShadow: isDark
                   ? "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)"
                   : "0 8px 32px rgba(99,102,241,0.1), inset 0 1px 0 rgba(255,255,255,0.95)",

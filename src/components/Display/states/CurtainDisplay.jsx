@@ -11,7 +11,7 @@ export default function CurtainDisplay({ device, variant = "status" }) {
       <div className="justify-center items-start h-full">
         <div className="inline-flex items-center justify-center rounded-full px-[84px] py-[13px] min-w-[56px] transition-all duration-[280ms] ease-in-out">
           <span className="font-sans text-[15px] font-light tracking-[1.5px] text-white/50">
-            {isOpen ? "OPEN" : "OFF"}
+            {isOpen ? "OPEN" : "STOP"}
           </span>
         </div>
       </div>
