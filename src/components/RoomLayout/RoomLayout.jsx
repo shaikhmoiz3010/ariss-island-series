@@ -380,29 +380,19 @@ export default function RoomLayout() {
     return () => ro.disconnect();
   }, [draw]);
 
-  return (
-    <div className="              flex-1 w-full sm:min-h-0
-              rounded-2xl overflow-hidden
-              transition-all duration-400"
-      ref={containerRef}
-      style={{
-        width: '100%',
-        aspectRatio: '3 / 2',
-        borderRadius: '12px',
-        overflow: 'hidden',
-        position: 'relative',
-      }}
-    >
-      <canvas
-        ref={canvasRef}
-        // onClick={handleClick}
-        style={{
-          display: 'block',
-          width: '100%',
-          height: '100%',
-          cursor: 'pointer',
-        }}
-      />
-    </div>
+return (
+  <canvas
+    ref={el => {
+      canvasRef.current    = el;
+      containerRef.current = el;
+    }}
+
+    style={{
+      display:  'block',
+      width:    '100%',
+      height:   '100%',
+      cursor:   'pointer',
+    }}
+  />
   );
 }

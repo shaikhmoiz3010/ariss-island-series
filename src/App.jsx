@@ -343,8 +343,8 @@ export default function App() {
       </header>
 
       {/* ══ MAIN ══ */}
-      <main className="relative z-10 flex-1 flex flex-col items-center px-3 sm:px-4 lg:px-6 py-5 sm:py-8 gap-5 sm:gap-8">
-        <div className="w-full   max-w-[1200px] flex-1 flex flex-col">
+      <main className="relative z-10 flex-2 flex flex-col items-center px-3 sm:px-12 lg:px-6 py-5 sm:py-8 gap-5 sm:gap-8">
+        <div className="w-full flex-1 flex flex-col">
           <div className="flex flex-col-reverse sm:flex-row items-center sm:items-stretch gap-4 sm:gap-6 lg:gap-8 w-full flex-1">
 
             {/* switch panel — glass card */}
@@ -356,7 +356,7 @@ export default function App() {
                 WebkitBackdropFilter: "blur(20px) saturate(160%)",
                 border: isDark
                   ? "1px solid rgba(255,255,255,0.08)"
-                  : "2px solid rgba(99,102,241,0.15)",
+                  : "1px solid rgba(99,102,241,0.15)",
                 boxShadow: isDark
                   ? "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)"
                   : "0 8px 32px rgba(99,102,241,0.1), inset 0 1px 0 rgba(255,255,255,0.95)",
@@ -367,7 +367,7 @@ export default function App() {
 
             {/* room layout — glass card */}
             <div
-              className="flex-1 w-full h-full sm:h-full md:h-full rounded-2xl overflow-hidden transition-all duration-500"
+              className="flex-1 w-full h-full rounded-2xl overflow-hidden transition-all duration-500"
               style={{
                 backdropFilter: "blur(20px) saturate(160%)",
                 WebkitBackdropFilter: "blur(20px) saturate(160%)",
