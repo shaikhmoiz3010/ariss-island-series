@@ -343,7 +343,7 @@ export default function App() {
       </header>
 
       {/* ══ MAIN ══ */}
-      <main className="relative z-10 flex-2 flex flex-col items-center px-3 sm:px-12 lg:px-6 py-5 sm:py-8 gap-5 sm:gap-8">
+      <main className="relative z-10 flex-2 flex flex-col items-center px-3 sm:px-12 lg:px-6 py-4 sm:py-8 gap-5 sm:gap-8">
         <div className="w-full flex-1 flex flex-col">
           <div className="flex flex-col-reverse sm:flex-row items-center sm:items-stretch gap-4 sm:gap-6 lg:gap-8 w-full flex-1">
 
@@ -367,7 +367,7 @@ export default function App() {
 
             {/* room layout — glass card */}
             <div
-              className="flex-1 w-full h-full rounded-2xl overflow-hidden transition-all duration-500"
+              className="flex-1 w-full rounded-2xl overflow-hidden transition-all duration-500"
               style={{
                 backdropFilter: "blur(20px) saturate(160%)",
                 WebkitBackdropFilter: "blur(20px) saturate(160%)",
