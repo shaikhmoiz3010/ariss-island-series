@@ -5,15 +5,16 @@ import BgToggle from "./components/ThemePicker/BgToggle";
 import { useThemeStore } from "./state/useThemeStore";
 import RoomLayout from "./components/RoomLayout/RoomLayout";
 import { HOUSING_THEMES, BUTTON_THEMES } from "./constants/themes";
-import switchBg from "../src/assets/bg3.png";
+import MobileApp from "./components/MobileApp/MobileApp";
 
 export default function App() {
   const bgMode = useThemeStore((s) => s.bgMode);
   const { housingId, buttonId, setHousing, setButton } = useThemeStore();
   const isDark = bgMode === "dark";
 
-  const [bodyOpen, setBodyOpen] = useState(false);
+  const [bodyOpen,   setBodyOpen]   = useState(false);
   const [switchOpen, setSwitchOpen] = useState(false);
+  const [showApp,    setShowApp]    = useState(false);
 
   const closeAll = () => { setBodyOpen(false); setSwitchOpen(false); };
 
@@ -26,9 +27,28 @@ export default function App() {
           : "linear-gradient(135deg, #e8eaf6 0%, #dde8f0 30%, #e0ecf4 60%, #d8e8f8 100%)",
       }}
     >
+      {/* ── mobile app overlay ── */}
+      {showApp && (
+        <div className="fixed inset-0 z-[200] flex items-left justify-left bg-black/05 ">
+          <button
+            onClick={() => setShowApp(false)}
+            className="absolute top-4 left-[450px] z-[201] flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-all duration-200 active:scale-95"
+            style={{
+              background:  "rgba(255,255,255,0.10)",
+              borderColor: "rgba(255,255,255,0.20)",
+              color:       "rgba(255,255,255,0.80)",
+              fontFamily:  "monospace",
+              fontSize:    "12px",
+            }}
+          >
+            ✕ Close
+          </button>
+          <MobileApp />
+        </div>
+      )}
+
       {/* ── Ambient gradient orbs ── */}
       <div className="pointer-events-none fixed inset-0 z-0" aria-hidden="true">
-        {/* top-left orb */}
         <div
           className="absolute rounded-full blur-[120px] transition-all duration-700 w-[520px] h-[520px] -top-[180px] -left-[160px]"
           style={{
@@ -37,7 +57,6 @@ export default function App() {
               : "radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 70%)",
           }}
         />
-        {/* bottom-right orb */}
         <div
           className="absolute rounded-full blur-[140px] transition-all duration-700 w-[600px] h-[600px] -bottom-[200px] -right-[180px]"
           style={{
@@ -46,7 +65,6 @@ export default function App() {
               : "radial-gradient(circle, rgba(251,191,36,0.16) 0%, transparent 70%)",
           }}
         />
-        {/* centre accent */}
         <div
           className="absolute rounded-full blur-[180px] transition-all duration-700 w-[400px] h-[400px] top-[40%] left-[45%] -translate-x-1/2 -translate-y-1/2"
           style={{
@@ -61,7 +79,7 @@ export default function App() {
       <header
         className="sticky top-0 h-14 z-50 border-b transition-all duration-500"
         style={{
-          backdropFilter: "blur(24px) saturate(180%)",
+          backdropFilter:       "blur(24px) saturate(180%)",
           WebkitBackdropFilter: "blur(24px) saturate(180%)",
           background: isDark
             ? "linear-gradient(180deg, rgba(10,10,20,0.85) 0%, rgba(10,10,20,0.70) 100%)"
@@ -83,6 +101,7 @@ export default function App() {
         />
 
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 h-full flex items-center justify-between relative">
+
           {/* ── brand ── */}
           <div className="flex items-center">
             <span className="text-orange-500 font-mono text-sm sm:text-base tracking-[0.18em] uppercase font-semibold">
@@ -98,6 +117,35 @@ export default function App() {
 
           {/* ── right controls ── */}
           <div className="flex items-center gap-2 sm:gap-3 relative">
+
+            {/* ── phone icon — launches mobile app ── */}
+            <button
+              onClick={() => setShowApp(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border cursor-pointer transition-all duration-200 active:scale-95"
+              style={{
+                background:  isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.55)",
+                borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(99,102,241,0.18)",
+                boxShadow:   isDark
+                  ? "inset 0 1px 0 rgba(255,255,255,0.06)"
+                  : "inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 4px rgba(99,102,241,0.08)",
+              }}
+            >
+              <svg
+                width="13" height="13" viewBox="0 0 24 24" fill="none"
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                style={{ stroke: isDark ? "rgba(255,255,255,0.65)" : "rgba(30,30,60,0.65)" }}
+              >
+                <rect x="5" y="2" width="14" height="20" rx="2"/>
+                <line x1="12" y1="18" x2="12" y2="18.01"/>
+              </svg>
+              <span
+                className="font-mono text-[9px] tracking-[1px] uppercase hidden sm:inline"
+                style={{ color: isDark ? "rgba(255,255,255,0.65)" : "rgba(30,30,60,0.65)" }}
+              >
+                App
+              </span>
+            </button>
+
             <BgToggle />
 
             {/* ── DESKTOP: ThemePicker inline ── */}
@@ -147,7 +195,7 @@ export default function App() {
                   <div
                     className="absolute top-[calc(100%+8px)] right-0 z-50 w-[200px] p-3.5 rounded-2xl border shadow-2xl animate-[dropIn_0.16s_ease_forwards] backdrop-blur-2xl"
                     style={{
-                      backdropFilter: "blur(32px) saturate(200%)",
+                      backdropFilter:       "blur(32px) saturate(200%)",
                       WebkitBackdropFilter: "blur(32px) saturate(200%)",
                       background: isDark
                         ? "linear-gradient(135deg, rgba(15,15,30,0.92) 0%, rgba(20,18,35,0.88) 100%)"
@@ -183,7 +231,6 @@ export default function App() {
                         </svg>
                       </button>
                     </div>
-
                     <div className="flex flex-wrap gap-2">
                       {HOUSING_THEMES.map(t => (
                         <button
@@ -192,9 +239,9 @@ export default function App() {
                           onClick={() => setHousing(t.id)}
                           className="relative w-8 h-8 rounded-lg border-2 cursor-pointer transition-all duration-150 active:scale-90 hover:scale-110"
                           style={{
-                            background: t.swatch,
+                            background:  t.swatch,
                             borderColor: t.id === housingId ? "#f59e0b" : "rgba(255,255,255,0.18)",
-                            boxShadow: t.id === housingId
+                            boxShadow:   t.id === housingId
                               ? "0 0 0 3px rgba(245,158,11,0.3), 0 4px 12px rgba(0,0,0,0.3)"
                               : "0 2px 6px rgba(0,0,0,0.2)",
                           }}
@@ -210,7 +257,6 @@ export default function App() {
                         </button>
                       ))}
                     </div>
-
                     <p
                       className="mt-2.5 font-mono text-[8px] tracking-[1.5px] uppercase text-center"
                       style={{ color: isDark ? "rgba(255,255,255,0.3)" : "rgba(30,30,60,0.3)" }}
@@ -264,7 +310,7 @@ export default function App() {
                   <div
                     className="absolute top-[calc(100%+8px)] right-0 z-50 w-[200px] p-3.5 rounded-2xl border shadow-2xl animate-[dropIn_0.16s_ease_forwards] backdrop-blur-2xl"
                     style={{
-                      backdropFilter: "blur(32px) saturate(200%)",
+                      backdropFilter:       "blur(32px) saturate(200%)",
                       WebkitBackdropFilter: "blur(32px) saturate(200%)",
                       background: isDark
                         ? "linear-gradient(135deg, rgba(15,15,30,0.92) 0%, rgba(20,18,35,0.88) 100%)"
@@ -300,7 +346,6 @@ export default function App() {
                         </svg>
                       </button>
                     </div>
-
                     <div className="flex flex-wrap gap-2">
                       {BUTTON_THEMES.map(t => (
                         <button
@@ -309,9 +354,9 @@ export default function App() {
                           onClick={() => setButton(t.id)}
                           className="relative w-8 h-8 rounded-lg border-2 cursor-pointer transition-all duration-150 active:scale-90 hover:scale-110"
                           style={{
-                            background: t.swatch,
+                            background:  t.swatch,
                             borderColor: t.id === buttonId ? "#f59e0b" : "rgba(255,255,255,0.18)",
-                            boxShadow: t.id === buttonId
+                            boxShadow:   t.id === buttonId
                               ? "0 0 0 3px rgba(245,158,11,0.3), 0 4px 12px rgba(0,0,0,0.3)"
                               : "0 2px 6px rgba(0,0,0,0.2)",
                           }}
@@ -327,7 +372,6 @@ export default function App() {
                         </button>
                       ))}
                     </div>
-
                     <p
                       className="mt-2.5 font-mono text-[8px] tracking-[1.5px] uppercase text-center"
                       style={{ color: isDark ? "rgba(255,255,255,0.3)" : "rgba(30,30,60,0.3)" }}
@@ -343,16 +387,15 @@ export default function App() {
       </header>
 
       {/* ══ MAIN ══ */}
-      <main className="relative z-10 flex-2 flex flex-col items-center px-3 sm:px-12 lg:px-6 py-4 sm:py-8 gap-5 sm:gap-8">
+      <main className="relative z-10 flex-1 flex flex-col items-center px-3 sm:px-12 lg:px-6 py-4 sm:py-8 gap-5 sm:gap-8">
         <div className="w-full flex-1 flex flex-col">
           <div className="flex flex-col-reverse sm:flex-row items-center sm:items-stretch gap-4 sm:gap-6 lg:gap-8 w-full flex-1">
 
-            {/* switch panel — glass card */}
-            {/* switch panel — glass card */}
+            {/* switch panel */}
             <div
-              className="flex-shrink-0 w-full h-full sm:w-auto flex justify-center sm:justify-start rounded-2xl p-1 transition-all duration-500"
+              className="flex-shrink-0 w-full sm:w-auto flex justify-center sm:justify-start rounded-2xl p-1 transition-all duration-500"
               style={{
-                backdropFilter: "blur(20px) saturate(160%)",
+                backdropFilter:       "blur(20px) saturate(160%)",
                 WebkitBackdropFilter: "blur(20px) saturate(160%)",
                 border: isDark
                   ? "1px solid rgba(255,255,255,0.08)"
@@ -365,11 +408,11 @@ export default function App() {
               <SwitchPanel />
             </div>
 
-            {/* room layout — glass card */}
+            {/* room layout */}
             <div
-              className="flex-1 w-full rounded-2xl overflow-hidden transition-all duration-500"
+              className="flex-1 w-full min-h-[260px] sm:min-h-0 rounded-2xl overflow-hidden transition-all duration-500"
               style={{
-                backdropFilter: "blur(20px) saturate(160%)",
+                backdropFilter:       "blur(20px) saturate(160%)",
                 WebkitBackdropFilter: "blur(20px) saturate(160%)",
                 background: isDark
                   ? "linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%)"
