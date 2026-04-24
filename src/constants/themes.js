@@ -23,9 +23,8 @@ export const BUTTON_THEMES = [
   { id: "silver",       label: "Pearl Silver",        swatch: "#B8B8B8", top: "#B8B8B8", mid: "#B8B8B8", bot: "#B8B8B8" },
   { id: "orange",       label: "Terracotta Orange",   swatch: "#C4623C", top: "#C4623C", mid: "#C4623C", bot: "#C4623C" },
   { id: "black",        label: "Matte Black",         swatch: "#1C1C1C", top: "#1C1C1C", mid: "#1C1C1C", bot: "#1C1C1C" },
-  { id: "white",        label: "Pearl White",         swatch: "#F2EDE4", top: "#F2EDE4", mid: "#F2EDE4", bot: "#F2EDE4" },
+  { id: "white",        label: "Pearl White",         swatch: "#E6E1D8", top: "#E6E1D8", mid: "#E6E1D8", bot: "#E6E1D8" },
 ];
 
 export const DEFAULT_HOUSING = "white";
 export const DEFAULT_BUTTON  = "black";
-

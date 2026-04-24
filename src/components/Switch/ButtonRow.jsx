@@ -149,7 +149,7 @@ function HalfZone({ side, label, isOn, theme, onTap, onDoubleTap, onHoldStart, o
 
       {/* Label */}
       <span
-        className="m-5 text-gray-100 relative text-[10px] font-sans font-light tracking-wider z-[10]"
+        className="m-5 text-white relative text-[10px] font-sans font-light tracking-wider z-[10]"
         style={{ transition: "color 150ms" }}
       >
         {label}
