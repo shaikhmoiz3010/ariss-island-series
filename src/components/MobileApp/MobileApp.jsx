@@ -401,10 +401,10 @@ function MiniDimmer({ device, toggleDimmer, setBrightness, setCCT }) {
       </div>
       
       {/* Light preview */}
-      <div style={{ borderRadius: 18, height: 140, marginBottom: 14, position: "relative", background: `linear-gradient(to right, #B0D4F5 0%, #FFFFFF ${cctNormalized * 100}%, #F5A963  100%)`, opacity: on ? Math.max(brightness / 100, 0.25) : 0.25, overflow: "hidden", boxShadow: "inset 0 0 20px rgba(0,0,0,0.15)", transition: "opacity 0.3s" }}>
+      <div style={{ borderRadius: 18, height: 140, marginBottom: 14, position: "relative", background: `linear-gradient(to right, #F5A963 0%, #FFF5E0 ${cctNormalized * 100}%, #B0D4F5 100%)`, opacity: on ? Math.max(brightness / 100, 0.25) : 0.25, overflow: "hidden", boxShadow: "inset 0 0 20px rgba(0,0,0,0.15)", transition: "opacity 0.3s" }}>
         <div style={{ position: "absolute", bottom: 14, left: 14, display: "flex", alignItems: "center", gap: 8, color: "#fff", textShadow: "0 1px 3px rgba(0,0,0,0.4)" }}>
           <Sun size={18} color="#fff" strokeWidth={2} />
-          <span style={{ fontSize: 14, fontWeight: 700 }}>{brightness}%</span>
+          <span style={{ fontSize: 14, fontWeight: 600 }}>{brightness}%</span>
         </div>
       </div>
       
@@ -749,7 +749,8 @@ function SettingsPage({ onClose }) {
   );
 
   return (
-    <div style={{ position: "absolute", inset: 0, zIndex: 100, background: CL.pageBg, overflow: "auto" }}>
+    <>
+      <div style={{ position: "absolute", inset: 0, zIndex: 100, background: CL.pageBg, overflow: "auto", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px" }}>
         <div onClick={onClose} style={{ cursor: "pointer" }}><ChevronLeft size={20} color={CL.accent} /></div>
         <span style={{ fontSize: 16, fontWeight: 700, color: CL.accentDark }}>Settings</span>
@@ -766,8 +767,9 @@ function SettingsPage({ onClose }) {
         <Pill label="Restart Status" right="Configure >" onClick={() => setSub("restart")} />
         <Pill label="ARISS island Switch Ver." right="1.0.2" />
       </div>
+      </div>
       
-      {/* Backlight Brightness Sub-sheet */}
+      {/* All sub-sheets rendered outside the scrollable area for proper bottom positioning */}
       {sub === "brightness" && (
         <BottomSheet onClose={() => setSub(null)} maxH="50%">
           <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${CL.dkBorder}` }}>
@@ -782,7 +784,6 @@ function SettingsPage({ onClose }) {
         </BottomSheet>
       )}
       
-      {/* Display Brightness Sub-sheet */}
       {sub === "displayBrightness" && (
         <BottomSheet onClose={() => setSub(null)} maxH="50%">
           <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${CL.dkBorder}` }}>
@@ -797,7 +798,6 @@ function SettingsPage({ onClose }) {
         </BottomSheet>
       )}
       
-      {/* Screen Saver Sub-sheet */}
       {sub === "screensaver" && (
         <BottomSheet onClose={() => setSub(null)} maxH="50%">
           <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${CL.dkBorder}` }}>
@@ -828,7 +828,6 @@ function SettingsPage({ onClose }) {
         </BottomSheet>
       )}
       
-      {/* Sensitivity Sub-sheet */}
       {sub === "sensitivity" && (
         <BottomSheet onClose={() => setSub(null)} maxH="50%">
           <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${CL.dkBorder}` }}>
@@ -859,7 +858,6 @@ function SettingsPage({ onClose }) {
         </BottomSheet>
       )}
       
-      {/* Momentary Switch Sub-sheet */}
       {sub === "momentary" && (
         <BottomSheet onClose={() => setSub(null)} maxH="58%">
           <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${CL.dkBorder}` }}>
@@ -868,7 +866,7 @@ function SettingsPage({ onClose }) {
             <span onClick={() => setSub(null)} style={{ color: CL.dkDim, cursor: "pointer", fontSize: 13 }}>OK</span>
           </div>
           <div style={{ padding: "6px 20px 20px", color: CL.dkText }}>
-            {[1, 2, 3, 4, 5, 6, 7].map(r => {
+            {[1, 2, 3, 4].map(r => {
               const enabled = settings.momentary[r] || false;
               return (
                 <div key={r} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0", borderBottom: r < 7 ? "1px solid #2a2a2a" : "none" }}>
@@ -909,7 +907,6 @@ function SettingsPage({ onClose }) {
         </BottomSheet>
       )}
       
-      {/* Restart Status Sub-sheet */}
       {sub === "restart" && (
         <BottomSheet onClose={() => setSub(null)} maxH="58%">
           <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${CL.dkBorder}` }}>
@@ -918,7 +915,7 @@ function SettingsPage({ onClose }) {
             <span onClick={() => setSub(null)} style={{ color: CL.dkDim, cursor: "pointer", fontSize: 13 }}>OK</span>
           </div>
           <div style={{ padding: "6px 20px 20px", color: CL.dkText }}>
-            {[1, 2, 3, 4, 5, 6, 7].map(r => {
+            {[1, 2, 3, 4].map(r => {
               const val = settings.restartStatus[r] || "Last Status";
               const setVal = (v) => { 
                 const rs = { ...settings.restartStatus }; 
@@ -956,44 +953,11 @@ function SettingsPage({ onClose }) {
           </div>
         </BottomSheet>
       )}
-    </div>
+    </>
   );
 }
 
 /* ── Switch Tab (Relay List) ── */
-function RelayTile({ device, toggleRelay, updateDevice }) {
-  const [pressed, setPressed] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [tempName, setTempName] = useState(device.label);
-  const handleSaveName = () => { updateDevice(device.id, { label: tempName.trim() || device.label }); setEditing(false); };
-  
-  return (
-    <div 
-      onPointerDown={(e) => { if (!editing) setPressed(true); }} 
-      onPointerUp={(e) => { if (!editing) { setPressed(false); toggleRelay(device.id); } }} 
-      onPointerLeave={() => setPressed(false)} 
-      style={{ background: CL.cardBg, borderRadius: 12, padding: "8px 10px", boxShadow: CL.shadowOff, borderTop: "1px solid rgba(255,255,255,1)", border: device.on ? "1px solid rgba(255,150,80,0.5)" : "1px solid transparent", display: "flex", alignItems: "center", gap: 8, cursor: editing ? "default" : "pointer", transition: "all 0.3s cubic-bezier(0.25,0.8,0.25,1)", transform: pressed ? "scale(0.97)" : "scale(1)", userSelect: "none", height: 48, minWidth: 0 }}
-    >
-      <div style={{ width: 26, height: 26, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", background: device.on ? "rgba(245,197,66,0.12)" : "#F5F0E8", flexShrink: 0, filter: device.on ? CL.iconGlow : "none", transition: "filter 0.3s, background 0.3s" }}>
-        {device.on ? <Lightbulb size={15} color="#F5C542" fill="#F5C542" strokeWidth={1.6} /> : <LightbulbOff size={15} color="#B5AAA0" strokeWidth={1.6} />}
-      </div>
-      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 3 }}>
-        {editing ? (
-          <input autoFocus value={tempName} onChange={e => setTempName(e.target.value)} onBlur={handleSaveName} onKeyDown={e => { if (e.key === "Enter") handleSaveName(); }} onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()} style={{ fontSize: 12, fontWeight: 600, color: CL.textPri, border: "none", borderBottom: `1px solid ${CL.accent}`, background: "transparent", outline: "none", padding: "2px 0", width: "100%", minWidth: 0 }} />
-        ) : (
-          <>
-            <span style={{ fontSize: 12, fontWeight: 600, color: CL.textPri, lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>{device.label}</span>
-            <div onClick={(e) => { e.stopPropagation(); setTempName(device.label); setEditing(true); }} onPointerDown={e => e.stopPropagation()} style={{ cursor: "pointer", display: "flex", flexShrink: 0 }}><Pencil size={10} color={CL.textTer} /></div>
-          </>
-        )}
-      </div>
-      <div style={{ width: 30, height: 18, borderRadius: 9, flexShrink: 0, background: device.on ? CL.accent : "#D0C8C0", position: "relative", transition: "background 0.25s", boxShadow: device.on ? `0 0 6px ${CL.accent}66` : "none" }}>
-        <div style={{ width: 14, height: 14, borderRadius: 7, background: "#fff", position: "absolute", top: 2, left: device.on ? 14 : 2, transition: "left 0.25s", boxShadow: "0 1px 2px rgba(0,0,0,0.2)" }} />
-      </div>
-    </div>
-  );
-}
-
 function SwitchSection() {
   const devices = useDeviceStore((s) => s.devices);
   const toggleRelay = useDeviceStore((s) => s.toggleRelay);
@@ -1004,9 +968,7 @@ function SwitchSection() {
     { id: 101, name: "Relay 2", isOn: false },
     { id: 102, name: "Relay 3", isOn: false },
     { id: 103, name: "Relay 4", isOn: false },
-    { id: 104, name: "Relay 5", isOn: false },
-    { id: 105, name: "Relay 6", isOn: false },
-    { id: 106, name: "Relay 7", isOn: false },
+
   ]);
   
   // Get first relay from Zustand store
@@ -1149,21 +1111,96 @@ export default function MobileApp() {
   const liveConfig = config !== null ? devices.find((d) => d.id === config) : null;
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: "12px 12px", fontFamily: "'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
-      <style>{`@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}*{box-sizing:border-box}::-webkit-scrollbar{width:0}`}</style>
+    <div style={{ 
+      minHeight: "100vh", 
+      width: "100%",
+      background: "linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)", 
+      display: "flex", 
+      alignItems: "center", 
+      justifyContent: "center", 
+      padding: "clamp(8px, 2vw, 20px)", 
+      fontFamily: "'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" 
+    }}>
+      <style>{`
+        @keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+        *{box-sizing:border-box}
+        ::-webkit-scrollbar{width:0}
+        @media (max-width: 480px) {
+          .phone-shell {
+            border-radius: 40px !important;
+            padding: 8px !important;
+          }
+          .phone-screen {
+            border-radius: 32px !important;
+          }
+          .notch {
+            width: 100px !important;
+            height: 20px !important;
+            top: 6px !important;
+          }
+        }
+      `}</style>
       
       {/* Phone shell */}
-      <div style={{ width: 380, maxWidth: "100%", height: 900, maxHeight: "95vh", borderRadius: 55, background: "#1a1a1a", padding: 12, boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 0 2px #2a2a2a, inset 0 0 0 1px rgba(255,255,255,0.05)", position: "relative" }}>
-        <div style={{ width: "100%", height: "100%", borderRadius: 44, background: CL.pageBg, overflow: "hidden", position: "relative", display: "flex", flexDirection: "column" }}>
+      <div 
+        className="phone-shell"
+        style={{ 
+          width: "min(393px, 100%)", 
+          maxHeight: "min(852px, 95vh)",
+          aspectRatio: "393 / 852",
+          borderRadius: "clamp(40px, 5vw, 55px)", 
+          background: "#1a1a1a", 
+          padding: "clamp(8px, 1.5vw, 12px)", 
+          boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 0 2px #2a2a2a, inset 0 0 0 1px rgba(255,255,255,0.05)", 
+          position: "relative",
+          display: "flex"
+        }}
+      >
+        <div 
+          className="phone-screen"
+          style={{ 
+            width: "100%", 
+            height: "100%", 
+            borderRadius: "clamp(32px, 4.5vw, 44px)", 
+            background: CL.pageBg, 
+            overflow: "hidden", 
+            position: "relative", 
+            display: "flex", 
+            flexDirection: "column" 
+          }}
+        >
           
           {/* Notch */}
-          <div style={{ position: "absolute", top: 8, left: "50%", transform: "translateX(-50%)", width: 125, height: 24, background: "#000", borderRadius: 20, zIndex: 50 }} />
+          <div 
+            className="notch"
+            style={{ 
+              position: "absolute", 
+              top: "clamp(6px, 1.5vw, 18px)", 
+              left: "50%", 
+              transform: "translateX(-50%)", 
+              width: "clamp(100px, 30%, 125px)", 
+              height: "clamp(20px, 2.8vw, 24px)", 
+              background: "#000", 
+              borderRadius: 20, 
+              zIndex: 50 
+            }} 
+          />
           
           {/* Status bar */}
-          <div style={{ height: 40, flexShrink: 0, display: "flex", alignItems: "flex-end", justifyContent: "space-between", padding: "0px 24px 12px", fontSize: 15, fontWeight: 600, color: CL.textPri }}>
+          <div style={{ 
+            height: "clamp(40px, 6.3vw, 54px)", 
+            flexShrink: 0, 
+            display: "flex", 
+            alignItems: "flex-end", 
+            justifyContent: "space-between", 
+            padding: "0 clamp(20px, 6vw, 28px) clamp(8px, 1.5vw, 8px)", 
+            fontSize: "clamp(13px, 3.8vw, 15px)", 
+            fontWeight: 600, 
+            color: CL.textPri 
+          }}>
             <span>9:41</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13 }}>
-              <svg width="18" height="11" viewBox="0 0 17 11" fill="none"><path d="M1 7.5h2v2H1zM5 5.5h2v4H5zM9 3.5h2v6H9zM13 1.5h2v8h-2z" fill={CL.textPri} /></svg>
+            <div style={{ display: "flex", alignItems: "center", gap: "clamp(3px, 1vw, 5px)", fontSize: "clamp(12px, 3.3vw, 13px)" }}>
+              <svg width="clamp(15, 4.5vw, 17)" height="11" viewBox="0 0 17 11" fill="none"><path d="M1 7.5h2v2H1zM5 5.5h2v4H5zM9 3.5h2v6H9zM13 1.5h2v8h-2z" fill={CL.textPri} /></svg>
               <div style={{ width: 24, height: 11, border: `1px solid ${CL.textPri}`, borderRadius: 3, padding: 1, position: "relative" }}>
                 <div style={{ width: "85%", height: "100%", background: CL.textPri, borderRadius: 1 }} />
               </div>
@@ -1171,17 +1208,17 @@ export default function MobileApp() {
           </div>
           
           {/* Header */}
-          <div style={{ flexShrink: 0, padding: "12px 21px 0" }}>
+          <div style={{ flexShrink: 0, padding: "clamp(10px, 3vw, 14px) clamp(14px, 4.2vw, 16px) 0" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
               <div style={{ width: 28 }} />
-              <div style={{ fontSize: 17, fontWeight: 600, color: CL.textPri, letterSpacing: -0.2 }}>ARISS Island Series</div>
+              <div style={{ fontSize: "clamp(15px, 4.3vw, 17px)", fontWeight: 700, color: CL.textPri, letterSpacing: -0.2 }}>ARISS Island Series</div>
               <div style={{ display: "flex", alignItems: "center", gap: 2, background: CL.cardBg, borderRadius: 14, padding: "4px 8px", boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.04)", borderTop: "1px solid rgba(255,255,255,1)" }}>
                 <MoreHorizontal size={14} color={CL.textTer} />
               </div>
             </div>
             <div style={{ display: "flex", gap: 22, padding: "4px 2px 10px" }}>
-              <div onClick={() => setActiveTab("home")} style={{ fontSize: activeTab === "home" ? 22 : 16, fontWeight: 500, color: activeTab === "home" ? CL.textPri : CL.textTer, cursor: "pointer", transition: "all 0.25s ease", lineHeight: 1 }}>Home</div>
-              <div onClick={() => setActiveTab("switch")} style={{ fontSize: activeTab === "switch" ? 22 : 16, fontWeight: 500, color: activeTab === "switch" ? CL.textPri : CL.textTer, cursor: "pointer", transition: "all 0.25s ease", lineHeight: 1, alignSelf: "flex-end" }}>Switch</div>
+              <div onClick={() => setActiveTab("home")} style={{ fontSize: activeTab === "home" ? "clamp(18px, 5.6vw, 22px)" : "clamp(14px, 4vw, 16px)", fontWeight: 700, color: activeTab === "home" ? CL.textPri : CL.textTer, cursor: "pointer", transition: "all 0.25s ease", lineHeight: 1 }}>Home</div>
+              <div onClick={() => setActiveTab("switch")} style={{ fontSize: activeTab === "switch" ? "clamp(18px, 5.6vw, 22px)" : "clamp(14px, 4vw, 16px)", fontWeight: 700, color: activeTab === "switch" ? CL.textPri : CL.textTer, cursor: "pointer", transition: "all 0.25s ease", lineHeight: 1, alignSelf: "flex-end" }}>Switch</div>
             </div>
           </div>
           
@@ -1196,7 +1233,7 @@ export default function MobileApp() {
           </div>
           
           {/* Bottom nav */}
-          <div style={{ flexShrink: 0, padding: "0px 24px 16px", background: CL.pageBg, borderTop: "1px solid rgba(0,0,0,0.04)" }}>
+          <div style={{ flexShrink: 0, padding: "clamp(6px, 1.5vw, 8px) clamp(20px, 6vw, 24px) clamp(16px, 3.8vw, 20px)", background: CL.pageBg, borderTop: "1px solid rgba(0,0,0,0.04)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-around", background: CL.cardBg, borderRadius: 24, padding: "10px 16px", boxShadow: CL.shadowOff, borderTop: "1px solid rgba(255,255,255,1)" }}>
               {[["home", "Home", <Home key="home" size={22} />], ["switch", "Switch", <Zap key="switch" size={22} />], ["settings", "Settings", <Settings key="settings" size={22} />]].map(([tab, label, icon], i) => {
                 const active = tab === "settings" ? showSettings : (activeTab === tab && !showSettings);
@@ -1214,7 +1251,7 @@ export default function MobileApp() {
           </div>
           
           {/* Home indicator */}
-          <div style={{ position: "absolute", bottom: 4, left: "50%", transform: "translateX(-50%)", width: 134, height: 5, background: CL.textPri, borderRadius: 3, opacity: 0.85, zIndex: 10 }} />
+          <div style={{ position: "absolute", bottom: "clamp(4px, 1vw, 8px)", left: "50%", transform: "translateX(-50%)", width: 134, height: 5, background: CL.textPri, borderRadius: 3, opacity: 0.85, zIndex: 10 }} />
           
           {/* Overlays */}
           {liveSheet && <MiniAppSheet device={liveSheet} onClose={() => setSheet(null)} />}
