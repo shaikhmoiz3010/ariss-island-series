@@ -16,14 +16,14 @@ export const HOUSING_THEMES = [
 ];
 
 export const BUTTON_THEMES = [
-  { id: "pastel-green", label: "Pastel Green", swatch: "#76B088", top: "#5c8a6e", mid: "#4d7860", bot: "#76B088" },
-  { id: "gray",         label: "Gray",         swatch: "#8F8F8F", top: "#7a7a7a", mid: "#626262", bot: "#8F8F8F" },
-  { id: "gold",         label: "Gold",         swatch: "#D6B042", top: "#c9a84c", mid: "#b8902a", bot: "#D6B042" },
-  { id: "navy",         label: "Navy",         swatch: "#0B1A36", top: "#3a5f9e", mid: "#2a4a7f", bot: "#0B1A36" },
-  { id: "silver",       label: "Silver",       swatch: "#B0B8BF", top: "#b8c0c8", mid: "#a0a8b0", bot: "#B0B8BF" },
-  { id: "orange",       label: "Orange",       swatch: "#EB701A", top: "#FF870D", mid: "#FF870D", bot: "#EB701A" },
-  { id: "black",        label: "Black",        swatch: "#1F1E1E", top: "#3a3a3a", mid: "#2a2a2a", bot: "#1F1E1E" },
-  { id: "white",        label: "White",        swatch: "#D1CDCD", top: "#e8e8e8", mid: "#d0d0d0", bot: "#D1CDCD" },
+  { id: "pastel-green", label: "Sage Green",          swatch: "#8A9B7E", top: "#8A9B7E", mid: "#8A9B7E", bot: "#8A9B7E" },
+  { id: "gray",         label: "Dark Gray",           swatch: "#3A3A3A", top: "#3A3A3A", mid: "#3A3A3A", bot: "#3A3A3A" },
+  { id: "gold",         label: "Champagne Gold",      swatch: "#C9A96E", top: "#C9A96E", mid: "#C9A96E", bot: "#C9A96E" },
+  { id: "navy",         label: "Navy Blue",           swatch: "#1E2D4A", top: "#1E2D4A", mid: "#1E2D4A", bot: "#1E2D4A" },
+  { id: "silver",       label: "Pearl Silver",        swatch: "#B8B8B8", top: "#B8B8B8", mid: "#B8B8B8", bot: "#B8B8B8" },
+  { id: "orange",       label: "Terracotta Orange",   swatch: "#C4623C", top: "#C4623C", mid: "#C4623C", bot: "#C4623C" },
+  { id: "black",        label: "Matte Black",         swatch: "#1C1C1C", top: "#1C1C1C", mid: "#1C1C1C", bot: "#1C1C1C" },
+  { id: "white",        label: "Pearl White",         swatch: "#F2EDE4", top: "#F2EDE4", mid: "#F2EDE4", bot: "#F2EDE4" },
 ];
 
 export const DEFAULT_HOUSING = "white";
