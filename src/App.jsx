@@ -27,25 +27,67 @@ export default function App() {
           : "linear-gradient(135deg, #e8eaf6 0%, #dde8f0 30%, #e0ecf4 60%, #d8e8f8 100%)",
       }}
     >
-      {/* ── mobile app overlay ── */}
+      {/* ── mobile app slide panel ── */}
+      {/* backdrop */}
       {showApp && (
-        <div className="fixed inset-0 z-[200] flex items-left justify-left bg-black/05 ">
-          <button
-            onClick={() => setShowApp(false)}
-            className="absolute top-4 left-[450px] z-[201] flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-all duration-200 active:scale-95"
+        <div 
+          className="fixed inset-0 z-[200] transition-opacity duration-300"
+          onClick={() => setShowApp(false)}
+        />
+      )}
+      
+      {/* slide panel */}
+      <div
+        className={`fixed top-0 left-0 h-full z-[201] transition-transform duration-300 ease-out ${
+          showApp ? "translate-x-0" : "-translate-x-full"
+        }`}
+        style={{
+          width: "min(90vw, 420px)",
+        }}
+      >
+        <div className="h-full flex flex-col relative">
+          {/* panel background and content */}
+          <div 
+            className="h-full overflow-hidden shadow-2xl relative"
             style={{
-              background:  "rgba(255,255,255,0.10)",
-              borderColor: "rgba(255,255,255,0.20)",
-              color:       "rgba(255,255,255,0.80)",
-              fontFamily:  "monospace",
-              fontSize:    "12px",
+              background: "#2a2a2a",
+              borderRight: isDark 
+                ? "1px solid rgba(255,255,255,0.1)" 
+                : "1px solid rgba(99,102,241,0.2)",
+              boxShadow: "4px 0 40px rgba(0,0,0,0.5)",
             }}
           >
-            ✕ Close
-          </button>
-          <MobileApp />
+            {/* close button - inside panel, top-right */}
+            <button
+              onClick={() => setShowApp(false)}
+              className="absolute right-4 top-4 z-[300] w-10 h-10 rounded-full border cursor-pointer transition-all duration-200 active:scale-95 hover:scale-105 flex items-center justify-center"
+              style={{
+                background: "rgba(0,0,0,0.6)",
+                borderColor: "rgba(255,255,255,0.2)",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+                backdropFilter: "blur(10px)",
+              }}
+            >
+              <svg 
+                width="16" 
+                height="16" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                strokeWidth="2.5" 
+                strokeLinecap="round"
+                style={{ 
+                  stroke: "rgba(255,255,255,0.9)" 
+                }}
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+            
+            <MobileApp />
+          </div>
         </div>
-      )}
+      </div>
 
       {/* ── Ambient gradient orbs ── */}
       <div className="pointer-events-none fixed inset-0 z-0" aria-hidden="true">
@@ -387,13 +429,13 @@ export default function App() {
       </header>
 
       {/* ══ MAIN ══ */}
-      <main className="relative z-10 flex-1 flex flex-col items-center px-3 sm:px-12 lg:px-6 py-4 sm:py-8 gap-5 sm:gap-8">
+      <main className="relative z-10 flex-2 flex flex-col items-center px-3 sm:px-12 lg:px-6 py-4 sm:py-8 gap-5 sm:gap-8">
         <div className="w-full flex-1 flex flex-col">
           <div className="flex flex-col-reverse sm:flex-row items-center sm:items-stretch gap-4 sm:gap-6 lg:gap-8 w-full flex-1">
 
             {/* switch panel */}
             <div
-              className="flex-shrink-0 w-full sm:w-auto flex justify-center sm:justify-start rounded-2xl p-1 transition-all duration-500"
+              className="flex-shrink-0 w-full sm:w-auto h-full flex justify-center sm:justify-start rounded-2xl p-1 transition-all duration-500"
               style={{
                 backdropFilter:       "blur(20px) saturate(160%)",
                 WebkitBackdropFilter: "blur(20px) saturate(160%)",
@@ -410,7 +452,7 @@ export default function App() {
 
             {/* room layout */}
             <div
-              className="flex-1 w-full min-h-[260px] sm:min-h-0 rounded-2xl overflow-hidden transition-all duration-500"
+              className="flex-1 w-full h-full sm:min-h-0 rounded-2xl overflow-hidden transition-all duration-500"
               style={{
                 backdropFilter:       "blur(20px) saturate(160%)",
                 WebkitBackdropFilter: "blur(20px) saturate(160%)",
