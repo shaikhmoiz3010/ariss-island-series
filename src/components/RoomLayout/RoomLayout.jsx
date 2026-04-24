@@ -313,7 +313,7 @@ export default function RoomLayout() {
     }
 
     /* ── fan ── */
-    const FCX = WX + WW / 2, FCY = WY + WH * 0.44;
+    const FCX = WX + WW * 0.48, FCY = WY + WH * 0.47;
     if (D.fan.speed > 0) {
       for (let r = 18; r <= 18 + D.fan.speed * 8; r += 8) {
         c.strokeStyle = `rgba(80,150,255,${Math.max(0, 0.06 - r * 0.001)})`; c.lineWidth = 0.4;
