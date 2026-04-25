@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SwitchPanel from "./components/Switch/SwitchPanel";
 import ThemePicker from "./components/ThemePicker/ThemePicker";
 import BgToggle from "./components/ThemePicker/BgToggle";
@@ -15,8 +15,72 @@ export default function App() {
   const [bodyOpen,   setBodyOpen]   = useState(false);
   const [switchOpen, setSwitchOpen] = useState(false);
   const [showApp,    setShowApp]    = useState(false);
+  const [showEmailCapture, setShowEmailCapture] = useState(false);
+  const [email, setEmail] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const closeAll = () => { setBodyOpen(false); setSwitchOpen(false); };
+
+  // Show email capture after 60 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isSubmitted) {
+        setShowEmailCapture(true);
+      }
+    }, 10000); // 60 seconds
+
+    return () => clearTimeout(timer);
+  }, [isSubmitted]);
+
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault();
+    if (email.trim()) {
+      setIsLoading(true);
+      setError("");
+      
+      try {
+        // Google Sheets Web App URL - Replace with your own
+        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbycep30o79VZXCRBkWZw0WDhyNCNvHQI_zdbrlPu3_iZjsl9ezVKR47CFxvyeOEAc6k/exec";
+        
+        const formData = new FormData();
+        formData.append('email', email.trim());
+        formData.append('timestamp', new Date().toISOString());
+        formData.append('source', 'Island Series UI');
+        
+        // Simulate minimum loading time for better UX (at least 800ms)
+        const [response] = await Promise.all([
+          fetch(GOOGLE_SHEET_URL, {
+            method: 'POST',
+            body: formData,
+            mode: 'no-cors' // Required for Google Apps Script
+          }),
+          new Promise(resolve => setTimeout(resolve, 800))
+        ]);
+        
+        // Show success state
+        setIsLoading(false);
+        setIsSubmitted(true);
+        setTimeout(() => {
+          setShowEmailCapture(false);
+          setEmail("");
+        }, 3000);
+      } catch (error) {
+        console.error('Error submitting email:', error);
+        setIsLoading(false);
+        setError("Something went wrong. Please try again.");
+        // Still show success after a moment (since no-cors mode doesn't return response)
+        setTimeout(() => {
+          setIsSubmitted(true);
+          setTimeout(() => {
+            setShowEmailCapture(false);
+            setEmail("");
+          }, 3000);
+        }, 1000);
+      }
+    }
+  };
 
   return (
     <div
@@ -31,7 +95,7 @@ export default function App() {
       {/* backdrop */}
       {showApp && (
         <div 
-          className="fixed inset-0 z-[200] transition-opacity duration-300"
+          className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm transition-opacity duration-300"
           onClick={() => setShowApp(false)}
         />
       )}
@@ -472,6 +536,333 @@ export default function App() {
 
           </div>
         </div>
+
+        {/* ── Email Capture Card ── */}
+        {showEmailCapture && (
+          <div 
+            className="fixed bottom-0 left-0 right-0 z-[150] transition-all duration-500 ease-out"
+            style={{
+              transform: showEmailCapture ? "translateY(0)" : "translateY(100%)",
+              animation: "slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
+            }}
+          >
+            <style>{`
+              @keyframes slideUp {
+                from { 
+                  transform: translateY(100%); 
+                  opacity: 0;
+                }
+                to { 
+                  transform: translateY(0); 
+                  opacity: 1;
+                }
+              }
+              @keyframes spin {
+                to { transform: rotate(360deg); }
+              }
+              @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+              }
+              @keyframes checkmark {
+                0% { 
+                  stroke-dashoffset: 100;
+                  opacity: 0;
+                }
+                50% {
+                  opacity: 1;
+                }
+                100% { 
+                  stroke-dashoffset: 0;
+                  opacity: 1;
+                }
+              }
+              .loading-spinner {
+                animation: spin 1s linear infinite;
+              }
+              .checkmark-path {
+                stroke-dasharray: 100;
+                animation: checkmark 0.6s ease-out forwards;
+              }
+            `}</style>
+            
+            <div 
+              className="max-w-md mx-auto m-4 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl"
+              style={{
+                background: isDark
+                  ? "linear-gradient(135deg, rgba(30,30,40,0.98) 0%, rgba(20,20,30,0.98) 100%)"
+                  : "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(250,250,255,0.98) 100%)",
+                border: isDark 
+                  ? "1px solid rgba(255,255,255,0.1)" 
+                  : "1px solid rgba(99,102,241,0.2)",
+                boxShadow: isDark
+                  ? "0 20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)"
+                  : "0 20px 60px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.95)",
+              }}
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setShowEmailCapture(false)}
+                className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95"
+                style={{
+                  background: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
+                  opacity: isLoading ? 0.5 : 1,
+                  pointerEvents: isLoading ? "none" : "auto"
+                }}
+              >
+                <svg 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round"
+                  style={{ 
+                    stroke: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)" 
+                  }}
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+
+              <div className="p-8 pt-10">
+                {!isSubmitted ? (
+                  <>
+                    {/* Animated Icon */}
+                    <div 
+                      className="w-16 h-16 rounded-full flex items-center justify-center mb-5 mx-auto transition-all duration-300"
+                      style={{
+                        background: isDark
+                          ? "linear-gradient(135deg, #f59e0b 0%, #f97316 100%)"
+                          : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                        boxShadow: isDark
+                          ? "0 8px 32px rgba(245,158,11,0.4), 0 0 0 8px rgba(245,158,11,0.1)"
+                          : "0 8px 32px rgba(99,102,241,0.3), 0 0 0 8px rgba(99,102,241,0.1)",
+                        transform: isLoading ? "scale(0.95)" : "scale(1)"
+                      }}
+                    >
+                      {isLoading ? (
+                        <svg 
+                          className="loading-spinner"
+                          width="28" 
+                          height="28" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="#fff" 
+                          strokeWidth="2.5" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                        >
+                          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                        </svg>
+                      ) : (
+                        <svg 
+                          width="28" 
+                          height="28" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="#fff" 
+                          strokeWidth="2" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                        >
+                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                          <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                      )}
+                    </div>
+
+                    {/* Title with shimmer effect */}
+                    <h3 
+                      className="text-xl font-bold text-center mb-2"
+                      style={{ 
+                        color: isDark ? "rgba(255,255,255,0.95)" : "rgba(30,30,60,0.95)",
+                        background: isDark 
+                          ? "linear-gradient(90deg, rgba(255,255,255,0.95) 0%, rgba(245,158,11,0.95) 50%, rgba(255,255,255,0.95) 100%)"
+                          : "linear-gradient(90deg, rgba(30,30,60,0.95) 0%, rgba(99,102,241,0.95) 50%, rgba(30,30,60,0.95) 100%)",
+                        backgroundSize: "200% auto",
+                        backgroundClip: "text",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent"
+                      }}
+                    >
+                      Loving the Island Series?
+                    </h3>
+
+                    {/* Subtitle */}
+                    <p 
+                      className="text-sm text-center mb-6"
+                      style={{ 
+                        color: isDark ? "rgba(255,255,255,0.65)" : "rgba(60,60,90,0.65)" 
+                      }}
+                    >
+                      Be the first to know when it's available
+                    </p>
+
+                    {/* Email Form */}
+                    <form onSubmit={handleEmailSubmit} className="space-y-4">
+                      <div>
+                        <input
+                          type="email"
+                          placeholder="Enter your email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          disabled={isLoading}
+                          required
+                          className="w-full px-5 py-3.5 rounded-xl border-2 outline-none transition-all duration-200"
+                          style={{
+                            background: isDark 
+                              ? "rgba(255,255,255,0.08)" 
+                              : "rgba(255,255,255,0.9)",
+                            borderColor: error 
+                              ? "#ef4444"
+                              : isDark 
+                                ? "rgba(255,255,255,0.15)" 
+                                : "rgba(99,102,241,0.2)",
+                            color: isDark ? "rgba(255,255,255,0.9)" : "rgba(30,30,60,0.9)",
+                            opacity: isLoading ? 0.7 : 1,
+                            cursor: isLoading ? "not-allowed" : "text"
+                          }}
+                          onFocus={(e) => {
+                            if (!isLoading) {
+                              e.target.style.borderColor = isDark ? "#f59e0b" : "#6366f1";
+                              e.target.style.boxShadow = isDark 
+                                ? "0 0 0 4px rgba(245,158,11,0.1)" 
+                                : "0 0 0 4px rgba(99,102,241,0.1)";
+                            }
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = error
+                              ? "#ef4444"
+                              : isDark 
+                                ? "rgba(255,255,255,0.15)" 
+                                : "rgba(99,102,241,0.2)";
+                            e.target.style.boxShadow = "none";
+                          }}
+                        />
+                        {error && (
+                          <p className="text-red-500 text-xs mt-2 ml-1">{error}</p>
+                        )}
+                      </div>
+                      
+                      <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full px-5 py-3.5 rounded-xl font-bold text-base cursor-pointer transition-all duration-300 active:scale-98 disabled:cursor-not-allowed relative overflow-hidden"
+                        style={{
+                          background: isLoading
+                            ? isDark ? "rgba(245,158,11,0.5)" : "rgba(99,102,241,0.5)"
+                            : isDark
+                              ? "linear-gradient(135deg, #f59e0b 0%, #f97316 100%)"
+                              : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                          color: "#fff",
+                          boxShadow: isLoading 
+                            ? "none"
+                            : isDark
+                              ? "0 6px 24px rgba(245,158,11,0.35)"
+                              : "0 6px 24px rgba(99,102,241,0.3)",
+                          transform: isLoading ? "scale(0.98)" : "scale(1)"
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isLoading) {
+                            e.target.style.transform = "scale(1.02)";
+                            e.target.style.boxShadow = isDark
+                              ? "0 8px 32px rgba(245,158,11,0.45)"
+                              : "0 8px 32px rgba(99,102,241,0.4)";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isLoading) {
+                            e.target.style.transform = "scale(1)";
+                            e.target.style.boxShadow = isDark
+                              ? "0 6px 24px rgba(245,158,11,0.35)"
+                              : "0 6px 24px rgba(99,102,241,0.3)";
+                          }
+                        }}
+                      >
+                        <span style={{ opacity: isLoading ? 0 : 1 }}>
+                          Notify Me
+                        </span>
+                        {isLoading && (
+                          <div className="absolute inset-0 flex items-center justify-center gap-2">
+                            <svg 
+                              className="loading-spinner"
+                              width="20" 
+                              height="20" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              stroke="#fff" 
+                              strokeWidth="3" 
+                              strokeLinecap="round"
+                            >
+                              <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                            </svg>
+                            <span>Submitting...</span>
+                          </div>
+                        )}
+                      </button>
+                    </form>
+
+                    <p 
+                      className="text-xs text-center mt-4"
+                      style={{ 
+                        color: isDark ? "rgba(255,255,255,0.4)" : "rgba(60,60,90,0.4)" 
+                      }}
+                    >
+                      🔒 We respect your privacy. Unsubscribe anytime.
+                    </p>
+                  </>
+                ) : (
+                  <div className="text-center py-6">
+                    {/* Success checkmark with animation */}
+                    <div 
+                      className="w-20 h-20 rounded-full flex items-center justify-center mb-5 mx-auto"
+                      style={{
+                        background: isDark
+                          ? "rgba(34,197,94,0.15)"
+                          : "rgba(34,197,94,0.1)",
+                        boxShadow: "0 0 0 12px rgba(34,197,94,0.05)"
+                      }}
+                    >
+                      <svg 
+                        width="40" 
+                        height="40" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="#22c55e" 
+                        strokeWidth="3" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                      >
+                        <polyline 
+                          className="checkmark-path"
+                          points="20 6 9 17 4 12"
+                        />
+                      </svg>
+                    </div>
+                    <h3 
+                      className="text-2xl font-bold mb-3"
+                      style={{ 
+                        color: isDark ? "rgba(255,255,255,0.95)" : "rgba(30,30,60,0.95)" 
+                      }}
+                    >
+                      You're on the list!
+                    </h3>
+                    <p 
+                      className="text-base"
+                      style={{ 
+                        color: isDark ? "rgba(255,255,255,0.7)" : "rgba(60,60,90,0.7)" 
+                      }}
+                    >
+                      We'll notify you as soon as the<br />Island Series becomes available
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
