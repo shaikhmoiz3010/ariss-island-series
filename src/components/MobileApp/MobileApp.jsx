@@ -401,7 +401,7 @@ function MiniDimmer({ device, toggleDimmer, setBrightness, setCCT }) {
       </div>
       
       {/* Light preview */}
-      <div style={{ borderRadius: 18, height: 140, marginBottom: 14, position: "relative", background: `linear-gradient(to right, #F5A963 0%, #FFF5E0 ${cctNormalized * 100}%, #B0D4F5 100%)`, opacity: on ? Math.max(brightness / 100, 0.25) : 0.25, overflow: "hidden", boxShadow: "inset 0 0 20px rgba(0,0,0,0.15)", transition: "opacity 0.3s" }}>
+      <div style={{ borderRadius: 18, height: 140, marginBottom: 14, position: "relative", background: `linear-gradient(to right,#B0D4F5  0%, #FFF5E0 ${cctNormalized * 100}%, #F5A963 100%)`, opacity: on ? Math.max(brightness / 100, 0.25) : 0.25, overflow: "hidden", boxShadow: "inset 0 0 20px rgba(0,0,0,0.15)", transition: "opacity 0.3s" }}>
         <div style={{ position: "absolute", bottom: 14, left: 14, display: "flex", alignItems: "center", gap: 8, color: "#fff", textShadow: "0 1px 3px rgba(0,0,0,0.4)" }}>
           <Sun size={18} color="#fff" strokeWidth={2} />
           <span style={{ fontSize: 14, fontWeight: 600 }}>{brightness}%</span>
