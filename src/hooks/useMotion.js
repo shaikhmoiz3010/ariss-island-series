@@ -1,3 +1,9 @@
+// FILE: src/hooks/useMotion.js
+// Detects mouse enter on the switch.
+// Returns { active, trigger, handleMouseEnter }
+// active=true  → show approach screens
+// active=false → show idle screens
+// ─────────────────────────────────────────────
 import { useState, useCallback, useRef } from "react";
 
 export function useMotion(timeout = 8000) {
@@ -10,5 +16,5 @@ export function useMotion(timeout = 8000) {
     timer.current = setTimeout(() => setActive(false), timeout);
   }, [timeout]);
 
-  return { active, trigger };
+  return { active, trigger, handleMouseEnter: trigger };
 }

@@ -1,6 +1,6 @@
-import { useState, useRef, useCallback } from "react";
-import DisplayRow        from "./DisplayRow";
-import ButtonPanel       from "./ButtonPanel";
+import { useState, useRef, useCallback, useEffect } from "react";
+import DisplayRow          from "./DisplayRow";
+import ButtonPanel         from "./ButtonPanel";
 import { useMotion }       from "../../hooks/useMotion";
 import { useDeviceStore }  from "../../state/useDeviceStore";
 import { useCurtainMotor } from "../../hooks/useCurtainMotor";
@@ -8,10 +8,15 @@ import { useHousingTheme, useButtonTheme } from "../../state/useThemeStore";
 
 const FOCUS_TIMEOUT = 6000;
 
+// Slot ID → side mapping
+const LEFT_IDS  = [0, 2, 4];
+const RIGHT_IDS = [1, 3, 5];
+
 export default function SwitchPanel() {
-  const devices      = useDeviceStore((s) => s.devices);
+  const devices      = useDeviceStore(s => s.devices);
   const housingTheme = useHousingTheme();
   const buttonTheme  = useButtonTheme();
+
   useCurtainMotor(5);
 
   const { active: motionActive, trigger } = useMotion(6000);
@@ -19,8 +24,31 @@ export default function SwitchPanel() {
   const [leftState,  setLeftStateRaw]  = useState("idle");
   const [rightState, setRightStateRaw] = useState("idle");
   const [hovered,    setHovered]       = useState(false);
+
   const leftTimer  = useRef(null);
   const rightTimer = useRef(null);
+
+  // Track previous device types to detect changes
+  const prevTypesRef = useRef({});
+
+  // When any device's type changes, reset that side's display state to idle
+  // so the stale display string (e.g. "dim") doesn't block the new type rendering
+  useEffect(() => {
+    const prev = prevTypesRef.current;
+    let leftDirty  = false;
+    let rightDirty = false;
+
+    devices.forEach(d => {
+      if (prev[d.id] !== undefined && prev[d.id] !== d.type) {
+        if (LEFT_IDS.includes(d.id))  leftDirty  = true;
+        if (RIGHT_IDS.includes(d.id)) rightDirty = true;
+      }
+      prev[d.id] = d.type;
+    });
+
+    if (leftDirty)  setLeftStateRaw("idle");
+    if (rightDirty) setRightStateRaw("idle");
+  }, [devices]);
 
   const setLeftState = useCallback((s) => {
     setLeftStateRaw(s);
@@ -39,8 +67,8 @@ export default function SwitchPanel() {
   }, []);
 
   const onActivity = useCallback(() => {
-    setLeftStateRaw((p)  => p === "idle" ? "approach" : p);
-    setRightStateRaw((p) => p === "idle" ? "approach" : p);
+    setLeftStateRaw(p  => p === "idle" ? "approach" : p);
+    setRightStateRaw(p => p === "idle" ? "approach" : p);
   }, []);
 
   const handleMouseEnter = useCallback(() => {
@@ -50,8 +78,8 @@ export default function SwitchPanel() {
 
   const handleMouseLeave = useCallback(() => {
     setHovered(false);
-    setLeftStateRaw((p)  => p === "approach" ? "idle" : p);
-    setRightStateRaw((p) => p === "approach" ? "idle" : p);
+    setLeftStateRaw(p  => p === "approach" ? "idle" : p);
+    setRightStateRaw(p => p === "approach" ? "idle" : p);
   }, []);
 
   const effectiveLeft = (() => {

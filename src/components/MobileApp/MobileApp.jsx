@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import {
   Lightbulb, LightbulbOff, Fan, Snowflake,
   Blinds, Sparkles, SunDim, Sun,
@@ -17,7 +17,7 @@ const CL = {
   accent: "#E8874A", accentDark: "#D27A2C",
   toggleOn: "#E8874A", toggleOff: "#D0C8C0",
   iconOff: "#B5AAA0", iconOn: "#E8974A",
-  iconGlow: "drop-shadow(0 0 4px rgba(245,168,108,0.7)) drop-drop-shadow(0 0 10px rgba(245,168,108,0.45))",
+  iconGlow: "drop-shadow(0 0 4px rgba(245,168,108,0.7))",
   dk: "#1A1A1A", dkCard: "#242424", dkBorder: "#333",
   dkText: "#FFFFFF", dkDim: "#888888", dkMuted: "#555",
   blue: "#4A9EF5",
@@ -25,270 +25,151 @@ const CL = {
 
 function DeviceIcon({ type, on = false, size = 26 }) {
   const color = on ? CL.iconOn : CL.iconOff;
-  const style = on ? { filter: CL.iconGlow, transition: "filter 0.3s" } : { filter: "none", transition: "filter 0.3s" };
+  const style = on
+    ? { filter: CL.iconGlow, transition: "filter 0.3s" }
+    : { filter: "none",      transition: "filter 0.3s" };
   const props = { size, color, strokeWidth: 1.8, style };
-  if (type === "fan") return <Fan {...props} />;
-  if (type === "ac") return <Snowflake {...props} />;
-  if (type === "curtain") return <Blinds {...props} />;
-  if (type === "scene") return <Sparkles {...props} />;
-  if (type === "dimmer") return on ? <Sun {...props} /> : <SunDim {...props} />;
+  if (type === "fan")     return <Fan      {...props} />;
+  if (type === "ac")      return <Snowflake {...props} />;
+  if (type === "curtain") return <Blinds   {...props} />;
+  if (type === "scene")   return <Sparkles {...props} />;
+  if (type === "dimmer")  return on ? <Sun {...props} /> : <SunDim {...props} />;
   return on ? <Lightbulb {...props} /> : <LightbulbOff {...props} />;
 }
 
-// Map your device structure to display format
 function getStatus(device) {
-  if (device.type === "relay") return device.on ? "ON" : "OFF";
-  if (device.type === "scene") return device.on ? "Running..." : "Ready";
-  if (device.type === "dimmer") {
-    if (!device.on) return "OFF";
-    return `${device.bright || 70}% · ${device.cct || 4000}K`;
-  }
+  if (device.type === "relay")   return device.on ? "ON" : "OFF";
+  if (device.type === "scene")   return device.on ? "Running..." : "Ready";
+  if (device.type === "dimmer")  return device.on ? `${device.bright || 70}% · ${device.cct || 4000}K` : "OFF";
   if (device.type === "curtain") {
     const pos = device.pos || 0;
-    if (pos === 0) return "Closed";
+    if (pos === 0)   return "Closed";
     if (pos === 100) return "Fully Open";
     return `Open ${Math.round(pos)}%`;
   }
-  if (device.type === "fan") {
-    return device.speed > 0 ? `Speed ${device.speed} of 4` : "OFF";
-  }
-  if (device.type === "ac") {
-    if (!device.on) return "OFF";
-    return `${device.temp || 24}°C · ${device.mode || "COOL"}`;
-  }
+  if (device.type === "fan") return device.speed > 0 ? `Speed ${device.speed} of 4` : "OFF";
+  if (device.type === "ac")  return device.on ? `${device.temp || 24}°C · ${device.mode || "COOL"}` : "OFF";
   return device.on ? "ON" : "OFF";
 }
 
 function isDeviceOn(device) {
-  if (device.type === "fan") return device.speed > 0;
+  if (device.type === "fan")     return device.speed > 0;
   if (device.type === "curtain") return device.pos > 0;
   return device.on;
 }
 
-/* ── DarkSlider ── */
+// ── DarkSlider ────────────────────────────────────────────────────────────────
 function DarkSlider({ value, min, max, onChange, color = "#fff" }) {
-  const trackRef = useRef(null);
+  const trackRef   = useRef(null);
   const isDragging = useRef(false);
   const [localValue, setLocalValue] = useState(value);
-  
-  // Sync local value with prop value when not dragging
-  useState(() => {
-    if (!isDragging.current) {
-      setLocalValue(value);
-    }
-  });
-  
+
+  // Sync when external value changes (switch panel adjustments etc.)
+  useEffect(() => {
+    if (!isDragging.current) setLocalValue(value);
+  }, [value]);
+
   const pct = ((localValue - min) / (max - min)) * 100;
-  
+
   const updateValue = useCallback((clientX) => {
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
-    const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-    const ratio = x / rect.width;
-    const newValue = Math.round(min + ratio * (max - min));
-    const clampedValue = Math.max(min, Math.min(max, newValue));
-    
-    // Update local value immediately for smooth UI
-    setLocalValue(clampedValue);
-    
-    // Call onChange (store update)
-    onChange(clampedValue);
+    const x    = Math.max(0, Math.min(clientX - rect.left, rect.width));
+    const next = Math.max(min, Math.min(max, Math.round(min + (x / rect.width) * (max - min))));
+    setLocalValue(next);
+    onChange(next);
   }, [min, max, onChange]);
-  
+
   const handleStart = useCallback((e) => {
     isDragging.current = true;
+    if (trackRef.current) trackRef.current.setPointerCapture(e.pointerId);
     updateValue(e.clientX);
-    
-    if (trackRef.current) {
-      trackRef.current.setPointerCapture(e.pointerId);
-    }
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
   }, [updateValue]);
-  
+
   const handleMove = useCallback((e) => {
-    if (isDragging.current) {
-      updateValue(e.clientX);
-      e.preventDefault();
-      e.stopPropagation();
-    }
+    if (!isDragging.current) return;
+    updateValue(e.clientX);
+    e.preventDefault(); e.stopPropagation();
   }, [updateValue]);
-  
+
   const handleEnd = useCallback((e) => {
-    if (isDragging.current) {
-      isDragging.current = false;
-      
-      if (trackRef.current && trackRef.current.hasPointerCapture(e.pointerId)) {
-        trackRef.current.releasePointerCapture(e.pointerId);
-      }
-    }
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    if (trackRef.current?.hasPointerCapture(e.pointerId))
+      trackRef.current.releasePointerCapture(e.pointerId);
   }, []);
-  
+
   return (
-    <div 
+    <div
       ref={trackRef}
       onPointerDown={handleStart}
       onPointerMove={handleMove}
       onPointerUp={handleEnd}
       onPointerCancel={handleEnd}
-      style={{ 
-        position: "relative", 
-        height: 40, 
-        cursor: isDragging.current ? "grabbing" : "grab", 
-        touchAction: "none", 
-        display: "flex", 
-        alignItems: "center",
-        userSelect: "none",
-        WebkitUserSelect: "none",
-        WebkitTapHighlightColor: "transparent"
-      }}
+      style={{ position: "relative", height: 40, cursor: "grab", touchAction: "none", display: "flex", alignItems: "center", userSelect: "none", WebkitUserSelect: "none", WebkitTapHighlightColor: "transparent" }}
     >
-      {/* Track background */}
-      <div style={{ 
-        position: "absolute", 
-        left: 0, 
-        right: 0, 
-        height: 5, 
-        borderRadius: 3, 
-        background: "#444",
-        pointerEvents: "none"
-      }}>
-        {/* Progress fill */}
-        <div style={{ 
-          height: "100%", 
-          width: `${pct}%`, 
-          borderRadius: 3, 
-          background: color, 
-          transition: isDragging.current ? "none" : "width 0.12s ease-out",
-          pointerEvents: "none"
-        }} />
+      <div style={{ position: "absolute", left: 0, right: 0, height: 5, borderRadius: 3, background: "#444", pointerEvents: "none" }}>
+        <div style={{ height: "100%", width: `${pct}%`, borderRadius: 3, background: color, transition: isDragging.current ? "none" : "width 0.12s ease-out", pointerEvents: "none" }} />
       </div>
-      
-      {/* Thumb */}
-      <div style={{ 
-        position: "absolute", 
-        left: `${pct}%`, 
-        transform: "translateX(-50%)", 
-        width: 24, 
-        height: 24, 
-        borderRadius: "50%", 
-        background: "#fff", 
-        boxShadow: isDragging.current 
-          ? "0 4px 12px rgba(0,0,0,0.35), 0 0 0 4px rgba(255,255,255,0.1)" 
-          : "0 2px 8px rgba(0,0,0,0.3)", 
-        transition: isDragging.current ? "none" : "all 0.12s ease-out",
-        pointerEvents: "none",
-        willChange: "left"
-      }} />
+      <div style={{ position: "absolute", left: `${pct}%`, transform: "translateX(-50%)", width: 24, height: 24, borderRadius: "50%", background: "#fff", boxShadow: isDragging.current ? "0 4px 12px rgba(0,0,0,0.35)" : "0 2px 8px rgba(0,0,0,0.3)", transition: isDragging.current ? "none" : "all 0.12s ease-out", pointerEvents: "none", willChange: "left" }} />
     </div>
   );
 }
 
+// ── CCTSlider ─────────────────────────────────────────────────────────────────
 function CCTSlider({ value, onChange }) {
-  const trackRef = useRef(null);
+  const trackRef   = useRef(null);
   const isDragging = useRef(false);
-  const [localValue, setLocalValue] = useState(value);
   const MIN = 2700, MAX = 6500;
-  
-  // Sync local value with prop value when not dragging
-  useState(() => {
-    if (!isDragging.current) {
-      setLocalValue(value);
-    }
-  });
-  
+  const [localValue, setLocalValue] = useState(value);
+
+  useEffect(() => {
+    if (!isDragging.current) setLocalValue(value);
+  }, [value]);
+
   const pct = ((localValue - MIN) / (MAX - MIN)) * 100;
-  
+
   const updateValue = useCallback((clientX) => {
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
-    const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-    const ratio = x / rect.width;
-    const newValue = Math.round(MIN + ratio * (MAX - MIN));
-    const clampedValue = Math.max(MIN, Math.min(MAX, newValue));
-    
-    // Update local value immediately for smooth UI
-    setLocalValue(clampedValue);
-    
-    // Call onChange (store update)
-    onChange(clampedValue);
+    const x    = Math.max(0, Math.min(clientX - rect.left, rect.width));
+    const next = Math.max(MIN, Math.min(MAX, Math.round(MIN + (x / rect.width) * (MAX - MIN))));
+    setLocalValue(next);
+    onChange(next);
   }, [onChange]);
-  
+
   const handleStart = useCallback((e) => {
     isDragging.current = true;
+    if (trackRef.current) trackRef.current.setPointerCapture(e.pointerId);
     updateValue(e.clientX);
-    
-    if (trackRef.current) {
-      trackRef.current.setPointerCapture(e.pointerId);
-    }
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
   }, [updateValue]);
-  
+
   const handleMove = useCallback((e) => {
-    if (isDragging.current) {
-      updateValue(e.clientX);
-      e.preventDefault();
-      e.stopPropagation();
-    }
+    if (!isDragging.current) return;
+    updateValue(e.clientX);
+    e.preventDefault(); e.stopPropagation();
   }, [updateValue]);
-  
+
   const handleEnd = useCallback((e) => {
-    if (isDragging.current) {
-      isDragging.current = false;
-      
-      if (trackRef.current && trackRef.current.hasPointerCapture(e.pointerId)) {
-        trackRef.current.releasePointerCapture(e.pointerId);
-      }
-    }
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    if (trackRef.current?.hasPointerCapture(e.pointerId))
+      trackRef.current.releasePointerCapture(e.pointerId);
   }, []);
-  
+
   return (
-    <div 
+    <div
       ref={trackRef}
       onPointerDown={handleStart}
       onPointerMove={handleMove}
       onPointerUp={handleEnd}
       onPointerCancel={handleEnd}
-      style={{ 
-        position: "relative", 
-        height: 36, 
-        cursor: isDragging.current ? "grabbing" : "grab", 
-        touchAction: "none", 
-        display: "flex", 
-        alignItems: "center",
-        userSelect: "none",
-        WebkitUserSelect: "none",
-        WebkitTapHighlightColor: "transparent"
-      }}
+      style={{ position: "relative", height: 36, cursor: "grab", touchAction: "none", display: "flex", alignItems: "center", userSelect: "none", WebkitUserSelect: "none", WebkitTapHighlightColor: "transparent" }}
     >
-      {/* CCT gradient track */}
-      <div style={{ 
-        position: "absolute", 
-        left: 0, 
-        right: 0, 
-        height: 10, 
-        borderRadius: 5, 
-        background: "linear-gradient(to right, #FF8C00 0%, #FFB347 25%, #FFF5E0 50%, #C5E3F5 75%, #87CEEB 100%)",
-        pointerEvents: "none"
-      }} />
-      
-      {/* Thumb */}
-      <div style={{ 
-        position: "absolute", 
-        left: `${pct}%`, 
-        transform: "translateX(-50%)", 
-        width: 22, 
-        height: 22, 
-        borderRadius: "50%", 
-        background: "#fff", 
-        boxShadow: isDragging.current
-          ? "0 4px 10px rgba(0,0,0,0.4), 0 0 0 3px rgba(232,135,74,0.6)"
-          : "0 2px 6px rgba(0,0,0,0.35), 0 0 0 2px rgba(232,135,74,0.5)", 
-        transition: isDragging.current ? "none" : "all 0.12s ease-out",
-        pointerEvents: "none",
-        willChange: "left"
-      }} />
+      <div style={{ position: "absolute", left: 0, right: 0, height: 10, borderRadius: 5, background: "linear-gradient(to right, #FF8C00 0%, #FFB347 25%, #FFF5E0 50%, #C5E3F5 75%, #87CEEB 100%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", left: `${pct}%`, transform: "translateX(-50%)", width: 22, height: 22, borderRadius: "50%", background: "#fff", boxShadow: isDragging.current ? "0 4px 10px rgba(0,0,0,0.4), 0 0 0 3px rgba(232,135,74,0.6)" : "0 2px 6px rgba(0,0,0,0.35), 0 0 0 2px rgba(232,135,74,0.5)", transition: isDragging.current ? "none" : "all 0.12s ease-out", pointerEvents: "none", willChange: "left" }} />
     </div>
   );
 }
@@ -309,31 +190,19 @@ function Toggle({ value, onChange }) {
   );
 }
 
-/* ── Tile with long-press ── */
+/* ── Tile ── */
 function Tile({ device, onTap, onExpand, onLongPress }) {
   const [pressed, setPressed] = useState(false);
-  const timer = useRef(null);
+  const timer  = useRef(null);
   const isLong = useRef(false);
-  const active = isDeviceOn(device);
-  const showArrow = ["fan", "dimmer", "curtain", "ac"].includes(device.type);
-  
+  const active     = isDeviceOn(device);
+  const showArrow  = ["fan", "dimmer", "curtain", "ac"].includes(device.type);
   return (
     <div style={{ background: active ? CL.onGrad : CL.cardBg, borderRadius: 50, padding: "0 10px 0 14px", height: 54, boxShadow: active ? CL.shadowOn : CL.shadowOff, display: "flex", justifyContent: "space-between", alignItems: "center", transition: "all 0.3s cubic-bezier(0.25,0.8,0.25,1)", transform: pressed ? "scale(0.97)" : "scale(1)", userSelect: "none", border: active ? "1px solid rgba(255,150,80,0.65)" : "1px solid transparent", borderTop: active ? "1px solid rgba(255,200,150,0.8)" : "1px solid rgba(255,255,255,1)" }}>
-      <div 
-        onPointerDown={() => { 
-          isLong.current = false; 
-          timer.current = setTimeout(() => { isLong.current = true; onLongPress(); }, 600); 
-          setPressed(true); 
-        }} 
-        onPointerUp={() => { 
-          clearTimeout(timer.current); 
-          setPressed(false); 
-          if (!isLong.current) onTap(); 
-        }} 
-        onPointerLeave={() => { 
-          clearTimeout(timer.current); 
-          setPressed(false); 
-        }} 
+      <div
+        onPointerDown={() => { isLong.current = false; timer.current = setTimeout(() => { isLong.current = true; onLongPress(); }, 600); setPressed(true); }}
+        onPointerUp={() => { clearTimeout(timer.current); setPressed(false); if (!isLong.current) onTap(); }}
+        onPointerLeave={() => { clearTimeout(timer.current); setPressed(false); }}
         style={{ flex: 1, cursor: "pointer", touchAction: "none", minWidth: 0, overflow: "hidden" }}
       >
         <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.2, marginBottom: 2, color: active ? CL.textOnActive : CL.textPri, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{device.label}</div>
@@ -341,13 +210,17 @@ function Tile({ device, onTap, onExpand, onLongPress }) {
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: 4, flexShrink: 0 }}>
         <DeviceIcon type={device.type} on={active} size={22} />
-        {showArrow && <div onClick={(e) => { e.stopPropagation(); onExpand(); }} style={{ cursor: "pointer", padding: 2, display: "flex", alignItems: "center" }}><ChevronDown size={20} color={active ? CL.textOnSub : CL.iconOff} fill={active ? CL.textOnSub : "#C5BDB5"} strokeWidth={0} /></div>}
+        {showArrow && (
+          <div onClick={(e) => { e.stopPropagation(); onExpand(); }} style={{ cursor: "pointer", padding: 2, display: "flex", alignItems: "center" }}>
+            <ChevronDown size={20} color={active ? CL.textOnSub : CL.iconOff} fill={active ? CL.textOnSub : "#C5BDB5"} strokeWidth={0} />
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-/* ── Bottom Sheet ── */
+/* ── BottomSheet ── */
 function BottomSheet({ children, onClose, maxH = "55%" }) {
   return (
     <div style={{ position: "absolute", inset: 0, zIndex: 100, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
@@ -360,20 +233,26 @@ function BottomSheet({ children, onClose, maxH = "55%" }) {
   );
 }
 
-/* ── Mini Controls ── */
-function MiniRelay({ device, toggleDevice }) {
+/* ── Mini controls ─────────────────────────────────────────────────────────────
+   KEY FIX: each action is selected individually (s => s.actionName) — never
+   return a new object from a selector, as that triggers an infinite render loop.
+   ────────────────────────────────────────────────────────────────────────────*/
+
+function MiniRelay({ device }) {
+  const toggleRelay = useDeviceStore(s => s.toggleRelay);
   return (
     <div style={{ padding: 20, textAlign: "center" }}>
       <div style={{ fontSize: 18, fontWeight: 600, color: CL.dkText, marginBottom: 24 }}>{device.label}</div>
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-        <PowerBtn isOn={device.on} onToggle={() => toggleDevice(device.id)} />
+        <PowerBtn isOn={device.on} onToggle={() => toggleRelay(device.id)} />
       </div>
       <div style={{ fontSize: 14, fontWeight: 600, color: device.on ? CL.blue : "#666" }}>{device.on ? "ON" : "OFF"}</div>
     </div>
   );
 }
 
-function MiniScene({ device, toggleScene }) {
+function MiniScene({ device }) {
+  const toggleScene = useDeviceStore(s => s.toggleScene);
   const [running, setRunning] = useState(false);
   return (
     <div style={{ padding: 20, textAlign: "center" }}>
@@ -388,65 +267,50 @@ function MiniScene({ device, toggleScene }) {
   );
 }
 
-function MiniDimmer({ device, toggleDimmer, setBrightness, setCCT }) {
-  const cctNormalized = ((device.cct || 4000) - 2700) / (6500 - 2700);
-  const brightness = device.bright || 100;
-  const on = device.on;
-  
+function MiniDimmer({ device }) {
+  // Select each action separately — never use s => ({ a, b, c }) pattern
+  const toggleDimmer = useDeviceStore(s => s.toggleDimmer);
+  const setBrightness = useDeviceStore(s => s.setBrightness);
+  const setCCT        = useDeviceStore(s => s.setCCT);
+
+  const on         = device.on;
+  const brightness = device.bright ?? 100;
+  const cct        = device.cct ?? 4000;
+  const cctNorm    = (cct - 2700) / (6500 - 2700);
+
   return (
     <div style={{ padding: "14px 18px 20px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <div style={{ fontSize: 17, fontWeight: 700, color: CL.dkText }}>{device.label}</div>
         <PowerBtn isOn={on} onToggle={() => toggleDimmer(device.id)} />
       </div>
-      
-      {/* Light preview */}
-      <div style={{ borderRadius: 18, height: 140, marginBottom: 14, position: "relative", background: `linear-gradient(to right,#B0D4F5  0%, #FFF5E0 ${cctNormalized * 100}%, #F5A963 100%)`, opacity: on ? Math.max(brightness / 100, 0.25) : 0.25, overflow: "hidden", boxShadow: "inset 0 0 20px rgba(0,0,0,0.15)", transition: "opacity 0.3s" }}>
+      <div style={{ borderRadius: 18, height: 140, marginBottom: 14, position: "relative", background: `linear-gradient(to right, #B0D4F5 0%, #FFF5E0 ${cctNorm * 100}%, #F5A963 100%)`, opacity: on ? Math.max(brightness / 100, 0.25) : 0.25, overflow: "hidden", boxShadow: "inset 0 0 20px rgba(0,0,0,0.15)", transition: "opacity 0.3s" }}>
         <div style={{ position: "absolute", bottom: 14, left: 14, display: "flex", alignItems: "center", gap: 8, color: "#fff", textShadow: "0 1px 3px rgba(0,0,0,0.4)" }}>
           <Sun size={18} color="#fff" strokeWidth={2} />
           <span style={{ fontSize: 14, fontWeight: 600 }}>{brightness}%</span>
         </div>
       </div>
-      
-      {/* CCT Temperature Control */}
       <div style={{ marginBottom: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: CL.dkText }}>Temperature</span>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#E8874A" }}>{device.cct || 4000}K</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#E8874A" }}>{cct}K</span>
         </div>
-        <CCTSlider 
-          value={device.cct || 4000} 
-          onChange={v => {
-            if (!on) toggleDimmer(device.id);
-            setCCT(device.id, v);
-          }} 
-        />
+        <CCTSlider value={cct} onChange={v => { if (!on) toggleDimmer(device.id); setCCT(device.id, v); }} />
       </div>
-      
-      {/* Brightness Control */}
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
           <span style={{ fontSize: 13, color: CL.dkDim }}>Brightness</span>
           <span style={{ fontSize: 13, fontWeight: 600, color: CL.dkText }}>{brightness}%</span>
         </div>
-        <DarkSlider 
-          value={brightness} 
-          min={0} 
-          max={100} 
-          onChange={v => {
-            if (!on) toggleDimmer(device.id);
-            setBrightness(device.id, v);
-          }} 
-          color="#fff" 
-        />
+        <DarkSlider value={brightness} min={0} max={100} onChange={v => { if (!on) toggleDimmer(device.id); setBrightness(device.id, v); }} color="#fff" />
       </div>
     </div>
   );
 }
 
-function MiniCurtain({ device, setCurtainPos }) {
-  const position = device.pos || 0;
-  
+function MiniCurtain({ device }) {
+  const setCurtainPos = useDeviceStore(s => s.setCurtainPos);
+  const position = device.pos ?? 0;
   return (
     <div style={{ padding: 20 }}>
       <div style={{ textAlign: "center", marginBottom: 16 }}>
@@ -456,24 +320,7 @@ function MiniCurtain({ device, setCurtainPos }) {
       <DarkSlider value={position} min={0} max={100} onChange={v => setCurtainPos(device.id, v)} />
       <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
         {[{ label: "CLOSE", pos: 0 }, { label: "PAUSE", pos: null }, { label: "OPEN", pos: 100 }].map(({ label, pos }) => (
-          <div 
-            key={label} 
-            onClick={() => { if (pos !== null) setCurtainPos(device.id, pos); }} 
-            style={{ 
-              flex: 1, 
-              padding: "12px 0", 
-              textAlign: "center", 
-              borderRadius: 10, 
-              cursor: "pointer", 
-              background: "#333", 
-              fontSize: 12, 
-              fontWeight: 600, 
-              color: pos === null ? "#666" : CL.dkText, 
-              border: "1px solid #444",
-              transition: "all 0.2s",
-              opacity: pos === null ? 0.5 : 1
-            }}
-          >
+          <div key={label} onClick={() => { if (pos !== null) setCurtainPos(device.id, pos); }} style={{ flex: 1, padding: "12px 0", textAlign: "center", borderRadius: 10, cursor: "pointer", background: "#333", fontSize: 12, fontWeight: 600, color: pos === null ? "#666" : CL.dkText, border: "1px solid #444", transition: "all 0.2s", opacity: pos === null ? 0.5 : 1 }}>
             {label}
           </div>
         ))}
@@ -482,10 +329,11 @@ function MiniCurtain({ device, setCurtainPos }) {
   );
 }
 
-function MiniFan({ device, toggleFan, setFanSpeed }) {
-  const on = device.speed > 0;
+function MiniFan({ device }) {
+  const toggleFan  = useDeviceStore(s => s.toggleFan);
+  const setFanSpeed = useDeviceStore(s => s.setFanSpeed);
+  const on    = device.speed > 0;
   const speed = device.speed || 1;
-  
   return (
     <div style={{ padding: 20 }}>
       <div style={{ textAlign: "center", marginBottom: 20 }}>
@@ -494,34 +342,13 @@ function MiniFan({ device, toggleFan, setFanSpeed }) {
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
         <PowerBtn isOn={on} onToggle={() => toggleFan(device.id)} color={CL.blue} />
       </div>
-      
       <div style={{ textAlign: "center", marginBottom: 14 }}>
         <span style={{ fontSize: 13, color: CL.dkDim }}>Speed </span>
         <span style={{ fontSize: 26, fontWeight: 700, color: on ? CL.blue : "#666" }}>{speed}</span>
       </div>
-      
       <div style={{ display: "flex", gap: 8 }}>
         {[1, 2, 3, 4].map(l => (
-          <div 
-            key={l} 
-            onClick={() => {
-              if (!on) toggleFan(device.id);
-              setFanSpeed(device.id, l);
-            }} 
-            style={{ 
-              flex: 1, 
-              padding: "14px 0", 
-              textAlign: "center", 
-              borderRadius: 10, 
-              cursor: "pointer", 
-              background: speed === l ? CL.blue : "#333", 
-              color: speed === l ? "#fff" : "#666", 
-              fontSize: 15, 
-              fontWeight: 700, 
-              border: `1px solid ${speed === l ? CL.blue : "#444"}`, 
-              transition: "all 0.2s" 
-            }}
-          >
+          <div key={l} onClick={() => { if (!on) toggleFan(device.id); setFanSpeed(device.id, l); }} style={{ flex: 1, padding: "14px 0", textAlign: "center", borderRadius: 10, cursor: "pointer", background: speed === l ? CL.blue : "#333", color: speed === l ? "#fff" : "#666", fontSize: 15, fontWeight: 700, border: `1px solid ${speed === l ? CL.blue : "#444"}`, transition: "all 0.2s" }}>
             {l}
           </div>
         ))}
@@ -530,14 +357,19 @@ function MiniFan({ device, toggleFan, setFanSpeed }) {
   );
 }
 
-function MiniAC({ device, toggleAC, setACTemp, cycleACMode, cycleACFanSpd }) {
-  const AC_MODES = ["COOL", "HOT", "AUTO", "DRY"];
+function MiniAC({ device }) {
+  const toggleAC     = useDeviceStore(s => s.toggleAC);
+  const setACTemp    = useDeviceStore(s => s.setACTemp);
+  const cycleACMode  = useDeviceStore(s => s.cycleACMode);
+  const cycleACFanSpd = useDeviceStore(s => s.cycleACFanSpd);
+
+  const AC_MODES  = ["COOL", "HOT", "AUTO", "DRY"];
   const AC_SPEEDS = ["LOW", "MED", "HIGH"];
-  const on = device.on;
-  const temp = device.temp || 24;
-  const mode = device.mode || "COOL";
-  const fanSpd = device.fanSpd || "MED";
-  
+  const on     = device.on;
+  const temp   = device.temp ?? 24;
+  const mode   = device.mode ?? "COOL";
+  const fanSpd = device.fanSpd ?? "MED";
+
   return (
     <div style={{ padding: 20 }}>
       <div style={{ textAlign: "center", marginBottom: 8 }}>
@@ -546,86 +378,32 @@ function MiniAC({ device, toggleAC, setACTemp, cycleACMode, cycleACFanSpd }) {
           <PowerBtn isOn={on} onToggle={() => toggleAC(device.id)} />
         </div>
       </div>
-      
       <div style={{ textAlign: "center", marginBottom: 6 }}>
         <span style={{ fontSize: 42, fontWeight: 700, color: on ? CL.blue : "#666" }}>{temp}</span>
         <span style={{ fontSize: 16, color: CL.dkDim }}>°C</span>
       </div>
-      
-      {/* Temperature Slider */}
       <div style={{ marginBottom: 12 }}>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: CL.dkDim, marginBottom: 4 }}>
           <span>Set Temperature</span>
           <span style={{ color: CL.dkText }}>{temp}°C</span>
         </div>
-        <DarkSlider 
-          value={temp} 
-          min={16} 
-          max={30} 
-          onChange={v => {
-            if (!on) toggleAC(device.id);
-            setACTemp(device.id, v);
-          }} 
-          color={CL.blue} 
-        />
+        <DarkSlider value={temp} min={16} max={30} onChange={v => { if (!on) toggleAC(device.id); setACTemp(device.id, v); }} color={CL.blue} />
       </div>
-      
-      {/* Mode Selector */}
       <div style={{ marginBottom: 10 }}>
         <div style={{ fontSize: 10, color: "#666", marginBottom: 6, letterSpacing: 1 }}>MODE</div>
         <div style={{ display: "flex", gap: 6 }}>
           {AC_MODES.map(m => (
-            <div 
-              key={m} 
-              onClick={() => {
-                if (!on) toggleAC(device.id);
-                cycleACMode(device.id);
-              }} 
-              style={{ 
-                flex: 1, 
-                padding: "8px 0", 
-                textAlign: "center", 
-                borderRadius: 8, 
-                cursor: "pointer", 
-                fontSize: 10, 
-                fontWeight: 700, 
-                background: mode === m ? CL.blue : "#333", 
-                color: mode === m ? "#fff" : "#666", 
-                border: `1px solid ${mode === m ? CL.blue : "#444"}`,
-                transition: "all 0.2s"
-              }}
-            >
+            <div key={m} onClick={() => { if (!on) toggleAC(device.id); cycleACMode(device.id); }} style={{ flex: 1, padding: "8px 0", textAlign: "center", borderRadius: 8, cursor: "pointer", fontSize: 10, fontWeight: 700, background: mode === m ? CL.blue : "#333", color: mode === m ? "#fff" : "#666", border: `1px solid ${mode === m ? CL.blue : "#444"}`, transition: "all 0.2s" }}>
               {m}
             </div>
           ))}
         </div>
       </div>
-      
-      {/* Fan Speed Selector */}
       <div>
         <div style={{ fontSize: 10, color: "#666", marginBottom: 6, letterSpacing: 1 }}>FAN SPEED</div>
         <div style={{ display: "flex", gap: 6 }}>
           {AC_SPEEDS.map(s => (
-            <div 
-              key={s} 
-              onClick={() => {
-                if (!on) toggleAC(device.id);
-                cycleACFanSpd(device.id);
-              }} 
-              style={{ 
-                flex: 1, 
-                padding: "8px 0", 
-                textAlign: "center", 
-                borderRadius: 8, 
-                cursor: "pointer", 
-                fontSize: 10, 
-                fontWeight: 700, 
-                background: fanSpd === s ? CL.blue : "#333", 
-                color: fanSpd === s ? "#fff" : "#666", 
-                border: `1px solid ${fanSpd === s ? CL.blue : "#444"}`,
-                transition: "all 0.2s"
-              }}
-            >
+            <div key={s} onClick={() => { if (!on) toggleAC(device.id); cycleACFanSpd(device.id); }} style={{ flex: 1, padding: "8px 0", textAlign: "center", borderRadius: 8, cursor: "pointer", fontSize: 10, fontWeight: 700, background: fanSpd === s ? CL.blue : "#333", color: fanSpd === s ? "#fff" : "#666", border: `1px solid ${fanSpd === s ? CL.blue : "#444"}`, transition: "all 0.2s" }}>
               {s}
             </div>
           ))}
@@ -635,56 +413,56 @@ function MiniAC({ device, toggleAC, setACTemp, cycleACMode, cycleACFanSpd }) {
   );
 }
 
-function MiniAppSheet({ device, onClose }) {
-  const { toggleDimmer, toggleRelay, toggleScene, toggleFan, toggleAC, toggleCurtain,
-    setBrightness, setCCT, setFanSpeed, setACTemp, cycleACMode, cycleACFanSpd, setCurtainPos } = useDeviceStore();
-  
+/* ── MiniAppSheet — subscribes to live device by ID ── */
+function MiniAppSheet({ deviceId, onClose }) {
+  const device = useDeviceStore(s => s.devices.find(d => d.id === deviceId));
   if (!device) return null;
-  
-  const controls = {
-    relay: () => <MiniRelay device={device} toggleDevice={toggleRelay} />,
-    scene: () => <MiniScene device={device} toggleScene={toggleScene} />,
-    dimmer: () => <MiniDimmer device={device} toggleDimmer={toggleDimmer} setBrightness={setBrightness} setCCT={setCCT} />,
-    curtain: () => <MiniCurtain device={device} setCurtainPos={setCurtainPos} />,
-    fan: () => <MiniFan device={device} toggleFan={toggleFan} setFanSpeed={setFanSpeed} />,
-    ac: () => <MiniAC device={device} toggleAC={toggleAC} setACTemp={setACTemp} cycleACMode={cycleACMode} cycleACFanSpd={cycleACFanSpd} />,
-  };
-  
-  const Ctrl = controls[device.type] || controls.relay;
+
   const maxH = device.type === "dimmer" ? "68%" : device.type === "ac" ? "70%" : "55%";
-  
-  return <BottomSheet onClose={onClose} maxH={maxH}><Ctrl /></BottomSheet>;
+  const controls = {
+    relay:   <MiniRelay   device={device} />,
+    scene:   <MiniScene   device={device} />,
+    dimmer:  <MiniDimmer  device={device} />,
+    curtain: <MiniCurtain device={device} />,
+    fan:     <MiniFan     device={device} />,
+    ac:      <MiniAC      device={device} />,
+  };
+
+  return (
+    <BottomSheet onClose={onClose} maxH={maxH}>
+      {controls[device.type] ?? controls.relay}
+    </BottomSheet>
+  );
 }
 
-/* ── Config Page (Long-press editor) ── */
+/* ── ConfigPage ── */
 function ConfigPage({ device, onClose }) {
-  const updateDevice = useDeviceStore((s) => s.updateDevice);
-  const [editing, setEditing] = useState(false);
+  const updateDevice = useDeviceStore(s => s.updateDevice);
+  const [editing,  setEditing]  = useState(false);
   const [iconOpen, setIconOpen] = useState(false);
-  
   if (!device) return null;
-  
+
   const funcTypes = [
-    { key: "relay", label: "Set Regular Switch" },
-    { key: "scene", label: "Set Scene Switch" },
-    { key: "dimmer", label: "Set Dimming Switch" },
-    { key: "curtain", label: "Set Curtain Switch" },
-    { key: "fan", label: "Set Fan Control" },
-    { key: "ac", label: "Set AC Control" },
+    { key: "relay",   label: "Set Regular Switch" },
+    { key: "scene",   label: "Set Scene Switch"   },
+    { key: "dimmer",  label: "Set Dimming Switch"  },
+    { key: "curtain", label: "Set Curtain Switch"  },
+    { key: "fan",     label: "Set Fan Control"     },
+    { key: "ac",      label: "Set AC Control"      },
   ];
   const iconTypes = ["relay", "dimmer", "fan", "ac", "curtain", "scene"];
-  
-  const upd = (updates) => {
-    updateDevice(device.id, updates);
-  };
-  
+  const upd = (updates) => updateDevice(device.id, updates);
+
   return (
     <div style={{ position: "absolute", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", padding: 14 }}>
       <div style={{ width: "100%", background: CL.pageBg2, borderRadius: 24, maxHeight: "88%", overflow: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px 8px" }}>
           <div onClick={onClose} style={{ cursor: "pointer" }}><ChevronLeft size={20} color={CL.textPri} /></div>
           <div style={{ fontSize: 16, fontWeight: 700, color: CL.accentDark }}>{device.label}</div>
-          <div style={{ display: "flex", gap: 8 }}><MoreHorizontal size={16} color={CL.textTer} /><div onClick={onClose} style={{ cursor: "pointer" }}><X size={16} color={CL.textTer} /></div></div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <MoreHorizontal size={16} color={CL.textTer} />
+            <div onClick={onClose} style={{ cursor: "pointer" }}><X size={16} color={CL.textTer} /></div>
+          </div>
         </div>
         <div style={{ padding: "4px 14px 20px" }}>
           {editing ? (
@@ -694,7 +472,10 @@ function ConfigPage({ device, onClose }) {
           ) : (
             <div onClick={() => setEditing(true)} style={{ background: CL.cardBg, borderRadius: 12, padding: "12px 14px", marginBottom: 6, display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", boxShadow: CL.shadowOff }}>
               <span style={{ fontSize: 13, color: CL.textSec }}>Change name</span>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ fontSize: 13, fontWeight: 600, color: CL.textPri }}>{device.label}</span><Pencil size={12} color={CL.textTer} /></div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: CL.textPri }}>{device.label}</span>
+                <Pencil size={12} color={CL.textTer} />
+              </div>
             </div>
           )}
           <div onClick={() => setIconOpen(!iconOpen)} style={{ background: CL.cardBg, borderRadius: 12, padding: "12px 14px", marginBottom: 6, display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", boxShadow: CL.shadowOff }}>
@@ -703,7 +484,11 @@ function ConfigPage({ device, onClose }) {
           </div>
           {iconOpen && (
             <div style={{ background: CL.cardBg, borderRadius: 12, padding: 10, marginBottom: 6, boxShadow: CL.shadowOff, display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
-              {iconTypes.map(t => <div key={t} onClick={() => { upd({ type: t }); setIconOpen(false); }} style={{ width: 40, height: 40, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", background: device.type === t ? `${CL.accent}20` : CL.pageBg2, border: `2px solid ${device.type === t ? CL.accent : "transparent"}`, transition: "all 0.2s" }}><DeviceIcon type={t} on={device.type === t} size={20} /></div>)}
+              {iconTypes.map(t => (
+                <div key={t} onClick={() => { upd({ type: t }); setIconOpen(false); }} style={{ width: 40, height: 40, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", background: device.type === t ? `${CL.accent}20` : CL.pageBg2, border: `2px solid ${device.type === t ? CL.accent : "transparent"}`, transition: "all 0.2s" }}>
+                  <DeviceIcon type={t} on={device.type === t} size={20} />
+                </div>
+              ))}
             </div>
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
@@ -725,51 +510,48 @@ function ConfigPage({ device, onClose }) {
   );
 }
 
-/* ── Settings Page ── */
+/* ── SettingsPage ── */
 function SettingsPage({ onClose }) {
   const [settings, setSettings] = useState({
-    backlight: true,
-    backlightBrightness: 40,
-    motionSensor: true,
-    screenSaver: "Clock only",
-    displayBrightness: 100,
-    motionSensitivity: "Low",
-    momentary: { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false },
-    restartStatus: { 1: "Last Status", 2: "Last Status", 3: "Last Status", 4: "Last Status", 5: "Last Status", 6: "Last Status", 7: "Last Status" }
+    backlight: true, backlightBrightness: 40, motionSensor: true,
+    screenSaver: "Clock only", displayBrightness: 100, motionSensitivity: "Low",
+    momentary: { 1: false, 2: false, 3: false, 4: false },
+    restartStatus: { 1: "Last Status", 2: "Last Status", 3: "Last Status", 4: "Last Status" },
   });
   const [sub, setSub] = useState(null);
-  
   const upd = (updates) => setSettings(p => ({ ...p, ...updates }));
-  
+
   const Pill = ({ label, right, onClick, toggle, onToggle }) => (
     <div onClick={onClick} style={{ background: CL.cardBg, borderRadius: 14, padding: "14px 16px", marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: CL.shadowOff, cursor: onClick ? "pointer" : "default", borderTop: "1px solid rgba(255,255,255,1)" }}>
       <span style={{ fontSize: 13, color: CL.textPri, fontWeight: 500 }}>{label}</span>
-      {toggle !== undefined ? <Toggle value={toggle} onChange={onToggle} /> : <span style={{ fontSize: 12, color: CL.textSec }}>{right}</span>}
+      {toggle !== undefined
+        ? <Toggle value={toggle} onChange={onToggle} />
+        : <span style={{ fontSize: 12, color: CL.textSec }}>{right}</span>
+      }
     </div>
   );
 
   return (
     <>
       <div style={{ position: "absolute", inset: 0, zIndex: 100, background: CL.pageBg, overflow: "auto", display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px" }}>
-        <div onClick={onClose} style={{ cursor: "pointer" }}><ChevronLeft size={20} color={CL.accent} /></div>
-        <span style={{ fontSize: 16, fontWeight: 700, color: CL.accentDark }}>Settings</span>
-        <MoreHorizontal size={16} color={CL.accent} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px" }}>
+          <div onClick={onClose} style={{ cursor: "pointer" }}><ChevronLeft size={20} color={CL.accent} /></div>
+          <span style={{ fontSize: 16, fontWeight: 700, color: CL.accentDark }}>Settings</span>
+          <MoreHorizontal size={16} color={CL.accent} />
+        </div>
+        <div style={{ padding: "4px 14px 32px" }}>
+          <Pill label="Switch Backlight"       toggle={settings.backlight}    onToggle={v => upd({ backlight: v })} />
+          <Pill label="Backlight Brightness"   right={`${settings.backlightBrightness}% >`} onClick={() => setSub("brightness")} />
+          <Pill label="Motion Sensor"          toggle={settings.motionSensor} onToggle={v => upd({ motionSensor: v })} />
+          <Pill label="Screen Saver"           right={`${settings.screenSaver} >`}           onClick={() => setSub("screensaver")} />
+          <Pill label="Display Brightness"     right={`${settings.displayBrightness}% >`}    onClick={() => setSub("displayBrightness")} />
+          <Pill label="Motion Sensitivity"     right={`${settings.motionSensitivity} >`}     onClick={() => setSub("sensitivity")} />
+          <Pill label="Momentary Switch"       right="Configure >"                            onClick={() => setSub("momentary")} />
+          <Pill label="Restart Status"         right="Configure >"                            onClick={() => setSub("restart")} />
+          <Pill label="ARISS island Switch Ver." right="1.0.2" />
+        </div>
       </div>
-      <div style={{ padding: "4px 14px 32px" }}>
-        <Pill label="Switch Backlight" toggle={settings.backlight} onToggle={v => upd({ backlight: v })} />
-        <Pill label="Backlight Brightness" right={`${settings.backlightBrightness}% >`} onClick={() => setSub("brightness")} />
-        <Pill label="Motion Sensor" toggle={settings.motionSensor} onToggle={v => upd({ motionSensor: v })} />
-        <Pill label="Screen Saver" right={`${settings.screenSaver} >`} onClick={() => setSub("screensaver")} />
-        <Pill label="Display Brightness" right={`${settings.displayBrightness}% >`} onClick={() => setSub("displayBrightness")} />
-        <Pill label="Motion Sensitivity" right={`${settings.motionSensitivity} >`} onClick={() => setSub("sensitivity")} />
-        <Pill label="Momentary Switch" right="Configure >" onClick={() => setSub("momentary")} />
-        <Pill label="Restart Status" right="Configure >" onClick={() => setSub("restart")} />
-        <Pill label="ARISS island Switch Ver." right="1.0.2" />
-      </div>
-      </div>
-      
-      {/* All sub-sheets rendered outside the scrollable area for proper bottom positioning */}
+
       {sub === "brightness" && (
         <BottomSheet onClose={() => setSub(null)} maxH="50%">
           <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${CL.dkBorder}` }}>
@@ -783,7 +565,6 @@ function SettingsPage({ onClose }) {
           </div>
         </BottomSheet>
       )}
-      
       {sub === "displayBrightness" && (
         <BottomSheet onClose={() => setSub(null)} maxH="50%">
           <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${CL.dkBorder}` }}>
@@ -797,7 +578,6 @@ function SettingsPage({ onClose }) {
           </div>
         </BottomSheet>
       )}
-      
       {sub === "screensaver" && (
         <BottomSheet onClose={() => setSub(null)} maxH="50%">
           <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${CL.dkBorder}` }}>
@@ -807,27 +587,11 @@ function SettingsPage({ onClose }) {
           </div>
           <div style={{ padding: "14px 20px", color: CL.dkText }}>
             {["Clock only", "Clock + weather", "Disable"].map(o => (
-              <div 
-                key={o} 
-                onClick={() => { upd({ screenSaver: o }); setSub(null); }} 
-                style={{ 
-                  padding: "12px 14px", 
-                  borderRadius: 10, 
-                  marginBottom: 6, 
-                  cursor: "pointer", 
-                  background: settings.screenSaver === o ? "#333" : "transparent", 
-                  color: settings.screenSaver === o ? CL.accent : CL.dkDim, 
-                  fontSize: 14, 
-                  border: `1px solid ${settings.screenSaver === o ? "#444" : "#333"}` 
-                }}
-              >
-                {o}
-              </div>
+              <div key={o} onClick={() => { upd({ screenSaver: o }); setSub(null); }} style={{ padding: "12px 14px", borderRadius: 10, marginBottom: 6, cursor: "pointer", background: settings.screenSaver === o ? "#333" : "transparent", color: settings.screenSaver === o ? CL.accent : CL.dkDim, fontSize: 14, border: `1px solid ${settings.screenSaver === o ? "#444" : "#333"}` }}>{o}</div>
             ))}
           </div>
         </BottomSheet>
       )}
-      
       {sub === "sensitivity" && (
         <BottomSheet onClose={() => setSub(null)} maxH="50%">
           <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${CL.dkBorder}` }}>
@@ -837,27 +601,11 @@ function SettingsPage({ onClose }) {
           </div>
           <div style={{ padding: "14px 20px", color: CL.dkText }}>
             {["Low", "Medium", "High"].map(l => (
-              <div 
-                key={l} 
-                onClick={() => { upd({ motionSensitivity: l }); setSub(null); }} 
-                style={{ 
-                  padding: "12px 14px", 
-                  borderRadius: 10, 
-                  marginBottom: 6, 
-                  cursor: "pointer", 
-                  background: settings.motionSensitivity === l ? "#333" : "transparent", 
-                  color: settings.motionSensitivity === l ? CL.accent : CL.dkDim, 
-                  fontSize: 14, 
-                  border: `1px solid ${settings.motionSensitivity === l ? "#444" : "#333"}` 
-                }}
-              >
-                {l}
-              </div>
+              <div key={l} onClick={() => { upd({ motionSensitivity: l }); setSub(null); }} style={{ padding: "12px 14px", borderRadius: 10, marginBottom: 6, cursor: "pointer", background: settings.motionSensitivity === l ? "#333" : "transparent", color: settings.motionSensitivity === l ? CL.accent : CL.dkDim, fontSize: 14, border: `1px solid ${settings.motionSensitivity === l ? "#444" : "#333"}` }}>{l}</div>
             ))}
           </div>
         </BottomSheet>
       )}
-      
       {sub === "momentary" && (
         <BottomSheet onClose={() => setSub(null)} maxH="58%">
           <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${CL.dkBorder}` }}>
@@ -869,36 +617,10 @@ function SettingsPage({ onClose }) {
             {[1, 2, 3, 4].map(r => {
               const enabled = settings.momentary[r] || false;
               return (
-                <div key={r} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0", borderBottom: r < 7 ? "1px solid #2a2a2a" : "none" }}>
+                <div key={r} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0", borderBottom: r < 4 ? "1px solid #2a2a2a" : "none" }}>
                   <span style={{ fontSize: 14, color: CL.dkText }}>Relay {r}</span>
-                  <div 
-                    onClick={() => { 
-                      const m = { ...settings.momentary }; 
-                      m[r] = !enabled; 
-                      upd({ momentary: m }); 
-                    }} 
-                    style={{ 
-                      width: 44, 
-                      height: 24, 
-                      borderRadius: 12, 
-                      cursor: "pointer", 
-                      position: "relative", 
-                      background: enabled ? CL.accent : "#3a3a3a", 
-                      transition: "background 0.25s", 
-                      boxShadow: enabled ? `0 0 8px ${CL.accent}66` : "none" 
-                    }}
-                  >
-                    <div style={{ 
-                      width: 18, 
-                      height: 18, 
-                      borderRadius: 9, 
-                      background: "#fff", 
-                      position: "absolute", 
-                      top: 3, 
-                      left: enabled ? 23 : 3, 
-                      transition: "left 0.25s", 
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.4)" 
-                    }} />
+                  <div onClick={() => { const m = { ...settings.momentary }; m[r] = !enabled; upd({ momentary: m }); }} style={{ width: 44, height: 24, borderRadius: 12, cursor: "pointer", position: "relative", background: enabled ? CL.accent : "#3a3a3a", transition: "background 0.25s", boxShadow: enabled ? `0 0 8px ${CL.accent}66` : "none" }}>
+                    <div style={{ width: 18, height: 18, borderRadius: 9, background: "#fff", position: "absolute", top: 3, left: enabled ? 23 : 3, transition: "left 0.25s", boxShadow: "0 1px 3px rgba(0,0,0,0.4)" }} />
                   </div>
                 </div>
               );
@@ -906,7 +628,6 @@ function SettingsPage({ onClose }) {
           </div>
         </BottomSheet>
       )}
-      
       {sub === "restart" && (
         <BottomSheet onClose={() => setSub(null)} maxH="58%">
           <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${CL.dkBorder}` }}>
@@ -916,35 +637,14 @@ function SettingsPage({ onClose }) {
           </div>
           <div style={{ padding: "6px 20px 20px", color: CL.dkText }}>
             {[1, 2, 3, 4].map(r => {
-              const val = settings.restartStatus[r] || "Last Status";
-              const setVal = (v) => { 
-                const rs = { ...settings.restartStatus }; 
-                rs[r] = v; 
-                upd({ restartStatus: rs }); 
-              };
+              const val    = settings.restartStatus[r] || "Last Status";
+              const setVal = (v) => { const rs = { ...settings.restartStatus }; rs[r] = v; upd({ restartStatus: rs }); };
               return (
-                <div key={r} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0", borderBottom: r < 7 ? "1px solid #2a2a2a" : "none" }}>
+                <div key={r} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0", borderBottom: r < 4 ? "1px solid #2a2a2a" : "none" }}>
                   <span style={{ fontSize: 14, color: CL.dkText }}>Relay {r}</span>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     {["Last Status", "OFF", "ON"].map(opt => (
-                      <div 
-                        key={opt} 
-                        onClick={() => setVal(opt)} 
-                        style={{ 
-                          padding: "5px 8px", 
-                          borderRadius: 6, 
-                          cursor: "pointer", 
-                          fontSize: 10, 
-                          fontWeight: 600, 
-                          background: val === opt ? (opt === "Last Status" ? CL.accent : `${CL.accent}20`) : "transparent", 
-                          color: val === opt ? (opt === "Last Status" ? "#fff" : CL.accent) : CL.dkDim, 
-                          border: `1px solid ${val === opt ? CL.accent : "transparent"}`, 
-                          transition: "all 0.2s",
-                          whiteSpace: "nowrap"
-                        }}
-                      >
-                        {opt}
-                      </div>
+                      <div key={opt} onClick={() => setVal(opt)} style={{ padding: "5px 8px", borderRadius: 6, cursor: "pointer", fontSize: 10, fontWeight: 600, background: val === opt ? (opt === "Last Status" ? CL.accent : `${CL.accent}20`) : "transparent", color: val === opt ? (opt === "Last Status" ? "#fff" : CL.accent) : CL.dkDim, border: `1px solid ${val === opt ? CL.accent : "transparent"}`, transition: "all 0.2s", whiteSpace: "nowrap" }}>{opt}</div>
                     ))}
                   </div>
                 </div>
@@ -957,69 +657,42 @@ function SettingsPage({ onClose }) {
   );
 }
 
-/* ── Switch Tab (Relay List) ── */
+/* ── SwitchSection ── */
 function SwitchSection() {
-  const devices = useDeviceStore((s) => s.devices);
-  const toggleRelay = useDeviceStore((s) => s.toggleRelay);
-  const updateDevice = useDeviceStore((s) => s.updateDevice);
-  
-  // Local state for additional relays (Relay 2-7)
+  const devices      = useDeviceStore(s => s.devices);
+  const toggleRelay  = useDeviceStore(s => s.toggleRelay);
+  const updateDevice = useDeviceStore(s => s.updateDevice);
+
   const [localRelays, setLocalRelays] = useState([
     { id: 101, name: "Relay 2", isOn: false },
     { id: 102, name: "Relay 3", isOn: false },
     { id: 103, name: "Relay 4", isOn: false },
-
   ]);
-  
-  // Get first relay from Zustand store
+
   const storeRelay = devices.find(d => d.type === "relay");
-  
-  // Combine store relay with local relays
-  const allRelays = storeRelay 
+  const allRelays  = storeRelay
     ? [{ id: storeRelay.id, name: storeRelay.label || "Relay 1", isOn: storeRelay.on }, ...localRelays]
     : localRelays;
-  
   const onCount = allRelays.filter(r => r.isOn).length;
-  
+
   const handleAllToggle = () => {
-    const newState = onCount < allRelays.length;
-    
-    // Toggle store relay
-    if (storeRelay) {
-      updateDevice(storeRelay.id, { on: newState });
-    }
-    
-    // Toggle local relays
-    setLocalRelays(prev => prev.map(r => ({ ...r, isOn: newState })));
+    const next = onCount < allRelays.length;
+    if (storeRelay) updateDevice(storeRelay.id, { on: next });
+    setLocalRelays(prev => prev.map(r => ({ ...r, isOn: next })));
   };
-  
+
   const handleRelayToggle = (relay) => {
-    if (storeRelay && relay.id === storeRelay.id) {
-      // Toggle Zustand relay
-      toggleRelay(storeRelay.id);
-    } else {
-      // Toggle local relay
-      setLocalRelays(prev => prev.map(r => 
-        r.id === relay.id ? { ...r, isOn: !r.isOn } : r
-      ));
-    }
+    if (storeRelay && relay.id === storeRelay.id) toggleRelay(storeRelay.id);
+    else setLocalRelays(prev => prev.map(r => r.id === relay.id ? { ...r, isOn: !r.isOn } : r));
   };
-  
+
   const handleRelayRename = (relay, newName) => {
-    if (storeRelay && relay.id === storeRelay.id) {
-      // Rename Zustand relay
-      updateDevice(storeRelay.id, { label: newName });
-    } else {
-      // Rename local relay
-      setLocalRelays(prev => prev.map(r => 
-        r.id === relay.id ? { ...r, name: newName } : r
-      ));
-    }
+    if (storeRelay && relay.id === storeRelay.id) updateDevice(storeRelay.id, { label: newName });
+    else setLocalRelays(prev => prev.map(r => r.id === relay.id ? { ...r, name: newName } : r));
   };
-  
+
   return (
     <div>
-      {/* All Relays Master Toggle */}
       <div style={{ margin: "4px 12px 10px", background: CL.cardBg, borderRadius: 14, padding: "10px 14px", boxShadow: CL.shadowOff, borderTop: "1px solid rgba(255,255,255,1)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={{ fontSize: 13, fontWeight: 700, color: CL.textPri }}>All Relays</div>
@@ -1029,34 +702,25 @@ function SwitchSection() {
           <div style={{ width: 20, height: 20, borderRadius: 10, background: "#fff", position: "absolute", top: 2, left: onCount === allRelays.length ? 22 : 2, transition: "left 0.25s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
         </div>
       </div>
-      
-      {/* Relay Grid - 2 columns */}
       <div style={{ padding: "0 12px 12px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         {allRelays.map(r => (
-          <LocalRelayTile 
-            key={r.id} 
-            relay={r} 
-            onToggle={() => handleRelayToggle(r)} 
-            onRename={(name) => handleRelayRename(r, name)} 
-          />
+          <LocalRelayTile key={r.id} relay={r} onToggle={() => handleRelayToggle(r)} onRename={name => handleRelayRename(r, name)} />
         ))}
       </div>
     </div>
   );
 }
 
-/* ── LocalRelayTile - For Switch Section ── */
 function LocalRelayTile({ relay, onToggle, onRename }) {
-  const [pressed, setPressed] = useState(false);
-  const [editing, setEditing] = useState(false);
+  const [pressed,  setPressed]  = useState(false);
+  const [editing,  setEditing]  = useState(false);
   const [tempName, setTempName] = useState(relay.name);
   const handleSaveName = () => { onRename(tempName.trim() || relay.name); setEditing(false); };
-  
   return (
-    <div 
-      onPointerDown={(e) => { if (!editing) setPressed(true); }} 
-      onPointerUp={(e) => { if (!editing) { setPressed(false); onToggle(); } }} 
-      onPointerLeave={() => setPressed(false)} 
+    <div
+      onPointerDown={() => { if (!editing) setPressed(true); }}
+      onPointerUp={()   => { if (!editing) { setPressed(false); onToggle(); } }}
+      onPointerLeave={() => setPressed(false)}
       style={{ background: CL.cardBg, borderRadius: 12, padding: "8px 10px", boxShadow: CL.shadowOff, borderTop: "1px solid rgba(255,255,255,1)", border: relay.isOn ? "1px solid rgba(255,150,80,0.5)" : "1px solid transparent", display: "flex", alignItems: "center", gap: 8, cursor: editing ? "default" : "pointer", transition: "all 0.3s cubic-bezier(0.25,0.8,0.25,1)", transform: pressed ? "scale(0.97)" : "scale(1)", userSelect: "none", height: 48, minWidth: 0 }}
     >
       <div style={{ width: 26, height: 26, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", background: relay.isOn ? "rgba(245,197,66,0.12)" : "#F5F0E8", flexShrink: 0, filter: relay.isOn ? CL.iconGlow : "none", transition: "filter 0.3s, background 0.3s" }}>
@@ -1068,7 +732,7 @@ function LocalRelayTile({ relay, onToggle, onRename }) {
         ) : (
           <>
             <span style={{ fontSize: 12, fontWeight: 600, color: CL.textPri, lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>{relay.name}</span>
-            <div onClick={(e) => { e.stopPropagation(); setTempName(relay.name); setEditing(true); }} onPointerDown={e => e.stopPropagation()} style={{ cursor: "pointer", display: "flex", flexShrink: 0 }}><Pencil size={10} color={CL.textTer} /></div>
+            <div onClick={e => { e.stopPropagation(); setTempName(relay.name); setEditing(true); }} onPointerDown={e => e.stopPropagation()} style={{ cursor: "pointer", display: "flex", flexShrink: 0 }}><Pencil size={10} color={CL.textTer} /></div>
           </>
         )}
       </div>
@@ -1079,134 +743,62 @@ function LocalRelayTile({ relay, onToggle, onRename }) {
   );
 }
 
-/* ══ Main App ══ */
+/* ══ Main MobileApp ══ */
 export default function MobileApp() {
-  const devices = useDeviceStore((s) => s.devices);
-  const { toggleDimmer, toggleRelay, toggleScene, toggleFan, toggleAC, toggleCurtain } = useDeviceStore();
-  
-  const [activeTab, setActiveTab] = useState("home");
-  const [sheet, setSheet] = useState(null);
-  const [config, setConfig] = useState(null);
+  const devices       = useDeviceStore(s => s.devices);
+  const toggleDimmer  = useDeviceStore(s => s.toggleDimmer);
+  const toggleRelay   = useDeviceStore(s => s.toggleRelay);
+  const toggleScene   = useDeviceStore(s => s.toggleScene);
+  const toggleFan     = useDeviceStore(s => s.toggleFan);
+  const toggleAC      = useDeviceStore(s => s.toggleAC);
+  const toggleCurtain = useDeviceStore(s => s.toggleCurtain);
+
+  const [activeTab,    setActiveTab]    = useState("home");
+  const [sheet,        setSheet]        = useState(null);
+  const [config,       setConfig]       = useState(null);
   const [showSettings, setShowSettings] = useState(false);
 
   const quickToggle = (device) => {
-    if (device.type === "dimmer") toggleDimmer(device.id);
-    else if (device.type === "relay") toggleRelay(device.id);
-    else if (device.type === "scene") toggleScene(device.id);
-    else if (device.type === "fan") toggleFan(device.id);
-    else if (device.type === "ac") toggleAC(device.id);
+    if      (device.type === "dimmer")  toggleDimmer(device.id);
+    else if (device.type === "relay")   toggleRelay(device.id);
+    else if (device.type === "scene")   toggleScene(device.id);
+    else if (device.type === "fan")     toggleFan(device.id);
+    else if (device.type === "ac")      toggleAC(device.id);
     else if (device.type === "curtain") toggleCurtain(device.id);
   };
 
   const handleTabClick = (tab) => {
-    if (tab === "settings") {
-      setShowSettings(true);
-    } else {
-      setActiveTab(tab);
-      setShowSettings(false);
-    }
+    if (tab === "settings") { setShowSettings(true); }
+    else { setActiveTab(tab); setShowSettings(false); }
   };
 
-  const liveSheet = sheet !== null ? devices.find((d) => d.id === sheet) : null;
-  const liveConfig = config !== null ? devices.find((d) => d.id === config) : null;
+  const liveConfig = config !== null ? devices.find(d => d.id === config) : null;
 
   return (
-    <div style={{ 
-      minHeight: "100vh", 
-      width: "100%",
-      background: "linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)", 
-      display: "flex", 
-      alignItems: "center", 
-      justifyContent: "center", 
-      padding: "clamp(8px, 2vw, 20px)", 
-      fontFamily: "'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" 
-    }}>
+    <div style={{ minHeight: "100vh", width: "100%", background: "linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: "clamp(8px, 2vw, 20px)", fontFamily: "'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
       <style>{`
-        @keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-        *{box-sizing:border-box}
-        ::-webkit-scrollbar{width:0}
-        @media (max-width: 480px) {
-          .phone-shell {
-            border-radius: 40px !important;
-            padding: 8px !important;
-          }
-          .phone-screen {
-            border-radius: 32px !important;
-          }
-          .notch {
-            width: 100px !important;
-            height: 20px !important;
-            top: 6px !important;
-          }
-        }
+        @keyframes sheetUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
+        * { box-sizing: border-box }
+        ::-webkit-scrollbar { width: 0 }
       `}</style>
-      
-      {/* Phone shell */}
-      <div 
-        className="phone-shell"
-        style={{ 
-          width: "min(393px, 100%)", 
-          maxHeight: "min(852px, 95vh)",
-          aspectRatio: "393 / 852",
-          borderRadius: "clamp(40px, 5vw, 55px)", 
-          background: "#1a1a1a", 
-          padding: "clamp(8px, 1.5vw, 12px)", 
-          boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 0 2px #2a2a2a, inset 0 0 0 1px rgba(255,255,255,0.05)", 
-          position: "relative",
-          display: "flex"
-        }}
-      >
-        <div 
-          className="phone-screen"
-          style={{ 
-            width: "100%", 
-            height: "100%", 
-            borderRadius: "clamp(32px, 4.5vw, 44px)", 
-            background: CL.pageBg, 
-            overflow: "hidden", 
-            position: "relative", 
-            display: "flex", 
-            flexDirection: "column" 
-          }}
-        >
-          
+
+      <div style={{ width: "min(393px, 100%)", maxHeight: "min(852px, 95vh)", aspectRatio: "393 / 852", borderRadius: "clamp(40px, 5vw, 55px)", background: "#1a1a1a", padding: "clamp(8px, 1.5vw, 12px)", boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 0 2px #2a2a2a, inset 0 0 0 1px rgba(255,255,255,0.05)", position: "relative", display: "flex" }}>
+        <div style={{ width: "100%", height: "100%", borderRadius: "clamp(32px, 4.5vw, 44px)", background: CL.pageBg, overflow: "hidden", position: "relative", display: "flex", flexDirection: "column" }}>
+
           {/* Notch */}
-          <div 
-            className="notch"
-            style={{ 
-              position: "absolute", 
-              top: "clamp(6px, 1.5vw, 18px)", 
-              left: "50%", 
-              transform: "translateX(-50%)", 
-              width: "clamp(100px, 30%, 125px)", 
-              height: "clamp(20px, 2.8vw, 24px)", 
-              background: "#000", 
-              borderRadius: 20, 
-              zIndex: 50 
-            }} 
-          />
-          
+          <div style={{ position: "absolute", top: "clamp(6px, 1.5vw, 18px)", left: "50%", transform: "translateX(-50%)", width: "clamp(100px, 30%, 125px)", height: "clamp(20px, 2.8vw, 24px)", background: "#000", borderRadius: 20, zIndex: 50 }} />
+
           {/* Status bar */}
-          <div style={{ 
-            height: "clamp(40px, 6.3vw, 54px)", 
-            flexShrink: 0, 
-            display: "flex", 
-            alignItems: "flex-end", 
-            justifyContent: "space-between", 
-            padding: "0 clamp(20px, 6vw, 28px) clamp(8px, 1.5vw, 8px)", 
-            fontSize: "clamp(13px, 3.8vw, 15px)", 
-            fontWeight: 600, 
-            color: CL.textPri 
-          }}>
+          <div style={{ height: "clamp(40px, 6.3vw, 54px)", flexShrink: 0, display: "flex", alignItems: "flex-end", justifyContent: "space-between", padding: "0 clamp(20px, 6vw, 28px) clamp(8px, 1.5vw, 8px)", fontSize: "clamp(13px, 3.8vw, 15px)", fontWeight: 600, color: CL.textPri }}>
             <span>9:41</span>
-            <div style={{ display: "flex", alignItems: "center", gap: "clamp(3px, 1vw, 5px)", fontSize: "clamp(12px, 3.3vw, 13px)" }}>
-              <svg width="clamp(15, 4.5vw, 17)" height="11" viewBox="0 0 17 11" fill="none"><path d="M1 7.5h2v2H1zM5 5.5h2v4H5zM9 3.5h2v6H9zM13 1.5h2v8h-2z" fill={CL.textPri} /></svg>
-              <div style={{ width: 24, height: 11, border: `1px solid ${CL.textPri}`, borderRadius: 3, padding: 1, position: "relative" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "clamp(3px, 1vw, 5px)" }}>
+              <svg width="17" height="11" viewBox="0 0 17 11" fill="none"><path d="M1 7.5h2v2H1zM5 5.5h2v4H5zM9 3.5h2v6H9zM13 1.5h2v8h-2z" fill={CL.textPri} /></svg>
+              <div style={{ width: 24, height: 11, border: `1px solid ${CL.textPri}`, borderRadius: 3, padding: 1 }}>
                 <div style={{ width: "85%", height: "100%", background: CL.textPri, borderRadius: 1 }} />
               </div>
             </div>
           </div>
-          
+
           {/* Header */}
           <div style={{ flexShrink: 0, padding: "clamp(10px, 3vw, 14px) clamp(14px, 4.2vw, 16px) 0" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
@@ -1217,25 +809,27 @@ export default function MobileApp() {
               </div>
             </div>
             <div style={{ display: "flex", gap: 22, padding: "4px 2px 10px" }}>
-              <div onClick={() => setActiveTab("home")} style={{ fontSize: activeTab === "home" ? "clamp(18px, 5.6vw, 22px)" : "clamp(14px, 4vw, 16px)", fontWeight: 700, color: activeTab === "home" ? CL.textPri : CL.textTer, cursor: "pointer", transition: "all 0.25s ease", lineHeight: 1 }}>Home</div>
-              <div onClick={() => setActiveTab("switch")} style={{ fontSize: activeTab === "switch" ? "clamp(18px, 5.6vw, 22px)" : "clamp(14px, 4vw, 16px)", fontWeight: 700, color: activeTab === "switch" ? CL.textPri : CL.textTer, cursor: "pointer", transition: "all 0.25s ease", lineHeight: 1, alignSelf: "flex-end" }}>Switch</div>
+              <div onClick={() => setActiveTab("home")} style={{ fontSize: activeTab === "home" ? "clamp(18px,5.6vw,22px)" : "clamp(14px,4vw,16px)", fontWeight: 700, color: activeTab === "home" ? CL.textPri : CL.textTer, cursor: "pointer", transition: "all 0.25s ease", lineHeight: 1 }}>Home</div>
+              <div onClick={() => setActiveTab("switch")} style={{ fontSize: activeTab === "switch" ? "clamp(18px,5.6vw,22px)" : "clamp(14px,4vw,16px)", fontWeight: 700, color: activeTab === "switch" ? CL.textPri : CL.textTer, cursor: "pointer", transition: "all 0.25s ease", lineHeight: 1, alignSelf: "flex-end" }}>Switch</div>
             </div>
           </div>
-          
+
           {/* Content */}
           <div style={{ flex: 1, overflow: "auto", position: "relative" }}>
             {activeTab === "home" && (
               <div style={{ padding: "8px 12px 20px", display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 10, rowGap: 16 }}>
-                {devices.map(d => <Tile key={d.id} device={d} onTap={() => quickToggle(d)} onExpand={() => setSheet(d.id)} onLongPress={() => setConfig(d.id)} />)}
+                {devices.map(d => (
+                  <Tile key={d.id} device={d} onTap={() => quickToggle(d)} onExpand={() => setSheet(d.id)} onLongPress={() => setConfig(d.id)} />
+                ))}
               </div>
             )}
             {activeTab === "switch" && <SwitchSection />}
           </div>
-          
+
           {/* Bottom nav */}
-          <div style={{ flexShrink: 0, padding: "clamp(6px, 1.5vw, 8px) clamp(20px, 6vw, 24px) clamp(16px, 3.8vw, 20px)", background: CL.pageBg, borderTop: "1px solid rgba(0,0,0,0.04)" }}>
+          <div style={{ flexShrink: 0, padding: "clamp(6px,1.5vw,8px) clamp(20px,6vw,24px) clamp(16px,3.8vw,20px)", background: CL.pageBg, borderTop: "1px solid rgba(0,0,0,0.04)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-around", background: CL.cardBg, borderRadius: 24, padding: "10px 16px", boxShadow: CL.shadowOff, borderTop: "1px solid rgba(255,255,255,1)" }}>
-              {[["home", "Home", <Home key="home" size={22} />], ["switch", "Switch", <Zap key="switch" size={22} />], ["settings", "Settings", <Settings key="settings" size={22} />]].map(([tab, label, icon], i) => {
+              {[["home", "Home", <Home key="h" size={22} />], ["switch", "Switch", <Zap key="s" size={22} />], ["settings", "Settings", <Settings key="g" size={22} />]].map(([tab, label, icon], i) => {
                 const active = tab === "settings" ? showSettings : (activeTab === tab && !showSettings);
                 return (
                   <div key={tab} style={{ display: "flex", alignItems: "center", gap: i === 0 ? 0 : 8 }}>
@@ -1249,14 +843,14 @@ export default function MobileApp() {
               })}
             </div>
           </div>
-          
+
           {/* Home indicator */}
-          <div style={{ position: "absolute", bottom: "clamp(4px, 1vw, 8px)", left: "50%", transform: "translateX(-50%)", width: 134, height: 5, background: CL.textPri, borderRadius: 3, opacity: 0.85, zIndex: 10 }} />
-          
+          <div style={{ position: "absolute", bottom: "clamp(4px,1vw,8px)", left: "50%", transform: "translateX(-50%)", width: 134, height: 5, background: CL.textPri, borderRadius: 3, opacity: 0.85, zIndex: 10 }} />
+
           {/* Overlays */}
-          {liveSheet && <MiniAppSheet device={liveSheet} onClose={() => setSheet(null)} />}
-          {liveConfig && <ConfigPage device={liveConfig} onClose={() => setConfig(null)} />}
-          {showSettings && <SettingsPage onClose={() => setShowSettings(false)} />}
+          {sheet !== null && <MiniAppSheet deviceId={sheet} onClose={() => setSheet(null)} />}
+          {liveConfig      && <ConfigPage  device={liveConfig} onClose={() => setConfig(null)} />}
+          {showSettings    && <SettingsPage onClose={() => setShowSettings(false)} />}
         </div>
       </div>
     </div>

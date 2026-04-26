@@ -10,14 +10,12 @@ function rr(c, x, y, w, h, r) {
   c.lineTo(x, y + r); c.arcTo(x, y, x + r, y, r);
   c.closePath();
 }
-
 function cctRgb(k) {
   if (k <= 3200) return [255, 168, 50];
   if (k <= 4200) return [255, 200, 105];
   if (k <= 5200) return [255, 230, 175];
   return [185, 210, 255];
 }
-
 function drawDownlight(c, x, y, on, br, lr, lg, lb) {
   if (on && br > 0) {
     const pool = c.createRadialGradient(x, y, 0, x, y, 55 + br * 35);
@@ -37,49 +35,51 @@ function drawDownlight(c, x, y, on, br, lr, lg, lb) {
     c.fillStyle = hs; c.beginPath(); c.arc(x, y, 6, 0, Math.PI * 2); c.fill();
   }
 }
-
 const AC_MODES = ['COOL', 'HOT', 'AUTO', 'DRY'];
 const MODE_CFG = {
   COOL: { w: [64, 160, 255], border: 'rgba(64,144,224,0.65)', led: '#2090ff', spread: 'rgba(64,144,224,0.12)', b0: '#0e1e36', b1: '#060e1e', swing: 'rgba(80,170,255,0.80)', temp: 'rgba(110,195,255,0.92)', lbl: 'rgba(80,170,255,0.75)' },
-  HOT: { w: [255, 140, 60], border: 'rgba(255,110,35,0.65)', led: '#ff5510', spread: 'rgba(255,130,50,0.12)', b0: '#281408', b1: '#180c04', swing: 'rgba(255,155,75,0.80)', temp: 'rgba(255,165,85,0.92)', lbl: 'rgba(255,135,55,0.75)' },
+  HOT:  { w: [255, 140, 60], border: 'rgba(255,110,35,0.65)', led: '#ff5510', spread: 'rgba(255,130,50,0.12)', b0: '#281408', b1: '#180c04', swing: 'rgba(255,155,75,0.80)', temp: 'rgba(255,165,85,0.92)', lbl: 'rgba(255,135,55,0.75)' },
   AUTO: { w: [100, 220, 130], border: 'rgba(70,195,110,0.60)', led: '#28b855', spread: 'rgba(80,200,115,0.10)', b0: '#0c1e10', b1: '#06100a', swing: 'rgba(95,215,130,0.75)', temp: 'rgba(115,225,140,0.92)', lbl: 'rgba(95,215,130,0.75)' },
-  DRY: { w: [90, 195, 255], border: 'rgba(70,190,255,0.55)', led: '#35ccff', spread: 'rgba(90,185,255,0.09)', b0: '#0c1e2c', b1: '#060e18', swing: 'rgba(110,205,255,0.75)', temp: 'rgba(115,210,255,0.92)', lbl: 'rgba(95,205,255,0.75)' },
+  DRY:  { w: [90, 195, 255], border: 'rgba(70,190,255,0.55)', led: '#35ccff', spread: 'rgba(90,185,255,0.09)', b0: '#0c1e2c', b1: '#060e18', swing: 'rgba(110,205,255,0.75)', temp: 'rgba(115,210,255,0.92)', lbl: 'rgba(95,205,255,0.75)' },
 };
-
 const BG_IMAGE_URL = room;
-
-/* design size — all coordinates are authored at this size */
 const DW = 600, DH = 400;
 
+// ─── Resolve devices by type (first match wins) ───────────────────────────────
+function byType(devices, type) {
+  return devices.find(d => d.type === type) ?? null;
+}
+
+// ─── Aggregate helpers ────────────────────────────────────────────────────────
+// When multiple devices share a type, combine their on-states (any one on = on)
+function anyOn(devices, type) {
+  return devices.filter(d => d.type === type).some(d => {
+    if (type === "fan") return d.speed > 0;
+    if (type === "curtain") return d.pos > 0;
+    return d.on;
+  });
+}
+
 export default function RoomLayout() {
-  const canvasRef = useRef(null);
+  const canvasRef    = useRef(null);
   const containerRef = useRef(null);
-  const fanAngleRef = useRef(0);
-  const acWindRef = useRef(0);
-  const acModeRef = useRef(0);
-  const bgImageRef = useRef(null);
-  const bgReadyRef = useRef(false);
-  const S = useRef({});
+  const fanAngleRef  = useRef(0);
+  const acWindRef    = useRef(0);
+  const bgImageRef   = useRef(null);
+  const bgReadyRef   = useRef(false);
+  const S            = useRef({});
 
-  const {
-    devices,
-  } = useDeviceStore();
+  const { devices } = useDeviceStore();
 
-  const lights = devices.find(d => d.id === 0);
-  const pendant = devices.find(d => d.id === 1);
-  const scene = devices.find(d => d.id === 2);
-  const ac = devices.find(d => d.id === 3);
-  const fan = devices.find(d => d.id === 4);
-  const curtain = devices.find(d => d.id === 5);
-
+  // Keep a ref that the animation loop reads — avoids stale closure
   useEffect(() => {
-    S.current = { lights, pendant, scene, ac, fan, curtain };
-  }, [lights, pendant, scene, ac, fan, curtain]);
+    S.current = devices;
+  }, [devices]);
 
   useEffect(() => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.onload = () => { bgImageRef.current = img; bgReadyRef.current = true; };
+    img.onload  = () => { bgImageRef.current = img; bgReadyRef.current = true; };
     img.onerror = () => { bgReadyRef.current = false; };
     img.src = BG_IMAGE_URL;
   }, []);
@@ -89,48 +89,53 @@ export default function RoomLayout() {
     if (!canvas) return;
     const c = canvas.getContext('2d');
     const W = canvas.width, H = canvas.height;
-    const D = S.current;
-    if (!D.lights) return;
 
-    const br = D.lights.on ? (D.lights.bright ?? 65) / 100 : 0;
-    const cct = D.lights.cct ?? 4000;
+    const devs = S.current;
+    if (!devs || devs.length === 0) return;
+
+    // ── Resolve by type ──
+    const lights  = byType(devs, "dimmer");
+    const pendant = byType(devs, "relay");
+    const scene   = byType(devs, "scene");
+    const ac      = byType(devs, "ac");
+    const fan     = byType(devs, "fan");
+    const curtain = byType(devs, "curtain");
+
+    // Derived values — safe defaults when a type isn't present
+    const br     = (lights?.on && (lights?.bright ?? 65) > 0) ? (lights.bright ?? 65) / 100 : 0;
+    const cct    = lights?.cct ?? 4000;
     const [lr, lg, lb] = cctRgb(cct);
-    const fa = fanAngleRef.current;
-    const acWind = acWindRef.current;
-    const acMode = AC_MODES[acModeRef.current];
-    const mc = MODE_CFG[acMode] || MODE_CFG.COOL;
+
+    const fa      = fanAngleRef.current;
+    const acWind  = acWindRef.current;
+    const acMode  = (ac?.mode && MODE_CFG[ac.mode]) ? ac.mode : 'COOL';
+    const mc      = MODE_CFG[acMode];
 
     c.clearRect(0, 0, W, H);
-
-    /* ── scale all drawing to 600×400 design space ── */
     c.save();
     c.scale(W / DW, H / DH);
 
     const WALL = 1;
     const WX = WALL, WY = WALL, WW = DW + WALL * 5, WH = DH - WALL;
 
-    /* ── background image ── */
+    // ── Background ──
     c.save();
     rr(c, WX, WY, WW, WH, 12); c.clip();
-
     if (bgReadyRef.current && bgImageRef.current) {
       const img = bgImageRef.current;
       const imgAR = img.width / img.height;
       const roomAR = WW / WH;
       let sx = 22, sy = 1, sw = img.width, sh = img.height;
       if (imgAR > roomAR) { sw = img.height * roomAR; sx = (img.width - sw) / 2; }
-      else { sh = img.width / roomAR; sy = (img.height - sh) / 2; }
+      else                { sh = img.width / roomAR;  sy = (img.height - sh) / 2; }
       c.drawImage(img, sx, sy, sw, sh, WX, WY, WW, WH);
     } else {
       const flG = c.createRadialGradient(WX + WW / 2, WY + WH * 0.45, 0, WX + WW / 2, WY + WH * 0.45, WW * 0.8);
       flG.addColorStop(0, 'rgba(22,32,52,1)'); flG.addColorStop(1, 'rgba(10,16,28,1)');
       c.fillStyle = flG; c.fillRect(WX, WY, WW, WH);
-      c.strokeStyle = `rgba(255,255,255,${0.018 + br * 0.008})`; c.lineWidth = 0.35;
-      for (let x = WX; x <= WX + WW; x += 38) { c.beginPath(); c.moveTo(x, WY); c.lineTo(x, WY + WH); c.stroke(); }
-      for (let y = WY; y <= WY + WH; y += 38) { c.beginPath(); c.moveTo(WX, y); c.lineTo(WX + WW, y); c.stroke(); }
     }
 
-    /* light wash */
+    // Light wash
     if (br > 0) {
       const ag = c.createRadialGradient(WX + WW / 2, WY + WH * 0.38, 0, WX + WW / 2, WY + WH * 0.38, WW * 0.75);
       ag.addColorStop(0, `rgba(${lr},${lg},${lb},${0.12 * br})`);
@@ -138,28 +143,31 @@ export default function RoomLayout() {
       ag.addColorStop(1, `rgba(${lr},${lg},${lb},0)`);
       c.fillStyle = ag; c.fillRect(WX, WY, WW, WH);
     }
-    if (D.scene.on) {
+    if (scene?.on) {
       const sg = c.createRadialGradient(WX + WW / 2, WY + WH / 2, 0, WX + WW / 2, WY + WH / 2, WW * 0.65);
       sg.addColorStop(0, 'rgba(90,45,200,0.12)'); sg.addColorStop(1, 'rgba(90,45,200,0)');
       c.fillStyle = sg; c.fillRect(WX, WY, WW, WH);
     }
-    c.restore(); /* end clip */
+    c.restore(); // end bg clip
 
-    /* ── LED strip top ── */
+    // ── LED strip top ──
     const sT = 5, gS = 50 + br * 44;
     const ledStrip = (side) => {
       let x1, y1, len;
       const horiz = side === 'top' || side === 'bottom';
-      if (side === 'top') { x1 = WX; y1 = WY; len = WW; }
+      if (side === 'top')    { x1 = WX; y1 = WY; len = WW; }
       if (side === 'bottom') { x1 = WX; y1 = WY + WH - sT; len = WW; }
-      if (side === 'left') { x1 = WX; y1 = WY; len = WH; }
-      if (side === 'right') { x1 = WX + WW - sT; y1 = WY; len = WH; }
+      if (side === 'left')   { x1 = WX; y1 = WY; len = WH; }
+      if (side === 'right')  { x1 = WX + WW - sT; y1 = WY; len = WH; }
       if (br > 0) {
         let grad;
-        if (side === 'top') { grad = c.createLinearGradient(0, y1 + sT, 0, y1 + sT + gS); grad.addColorStop(0, `rgba(${lr},${lg},${lb},${0.42 * br})`); grad.addColorStop(0.35, `rgba(${lr},${lg},${lb},${0.14 * br})`); grad.addColorStop(1, `rgba(${lr},${lg},${lb},0)`); c.fillStyle = grad; c.fillRect(x1, y1 + sT, len, gS); }
-        if (side === 'bottom') { grad = c.createLinearGradient(0, y1 - gS, 0, y1); grad.addColorStop(0, `rgba(${lr},${lg},${lb},0)`); grad.addColorStop(0.65, `rgba(${lr},${lg},${lb},${0.14 * br})`); grad.addColorStop(1, `rgba(${lr},${lg},${lb},${0.42 * br})`); c.fillStyle = grad; c.fillRect(x1, y1 - gS, len, gS); }
-        if (side === 'left') { grad = c.createLinearGradient(x1 + sT, 0, x1 + sT + gS, 0); grad.addColorStop(0, `rgba(${lr},${lg},${lb},${0.36 * br})`); grad.addColorStop(1, `rgba(${lr},${lg},${lb},0)`); c.fillStyle = grad; c.fillRect(x1 + sT, y1, gS, len); }
-        if (side === 'right') { grad = c.createLinearGradient(x1 - gS, 0, x1, 0); grad.addColorStop(0, `rgba(${lr},${lg},${lb},0)`); grad.addColorStop(1, `rgba(${lr},${lg},${lb},${0.36 * br})`); c.fillStyle = grad; c.fillRect(x1 - gS, y1, gS, len); }
+        if (side === 'top') {
+          grad = c.createLinearGradient(0, y1 + sT, 0, y1 + sT + gS);
+          grad.addColorStop(0, `rgba(${lr},${lg},${lb},${0.42 * br})`);
+          grad.addColorStop(0.35, `rgba(${lr},${lg},${lb},${0.14 * br})`);
+          grad.addColorStop(1, `rgba(${lr},${lg},${lb},0)`);
+          c.fillStyle = grad; c.fillRect(x1, y1 + sT, len, gS);
+        }
       }
       c.fillStyle = br > 0 ? `rgba(${lr},${lg},${lb},0.92)` : 'rgba(255,255,255,0.50)';
       if (horiz) c.fillRect(x1, y1, len, sT); else c.fillRect(x1, y1, sT, len);
@@ -176,11 +184,12 @@ export default function RoomLayout() {
     };
     ledStrip('top');
 
-    /* ── lamps ── */
+    // ── Pendant lamps ──
     const BX = WX + WW / 2 - 79, BY = WY - 6, BW = 155;
     const lLX = BX - 44, lRX = BX + BW + 26, lY = BY + 52;
+    const pendantOn = pendant?.on ?? false;
     [lLX, lRX].forEach(lx => {
-      if (D.pendant.on) {
+      if (pendantOn) {
         const lg3 = c.createRadialGradient(lx, lY, 0, lx, lY, 55);
         lg3.addColorStop(0, 'rgba(255,185,55,0.40)');
         lg3.addColorStop(0.4, 'rgba(255,185,55,0.14)');
@@ -188,34 +197,34 @@ export default function RoomLayout() {
         c.fillStyle = lg3; c.beginPath(); c.arc(lx, lY, 55, 0, Math.PI * 2); c.fill();
       }
       const lampRG = c.createRadialGradient(lx, lY, 0, lx, lY, 16);
-      lampRG.addColorStop(0, D.pendant.on ? '#c89828' : 'rgba(255,255,255,0.40)');
-      lampRG.addColorStop(1, D.pendant.on ? '#906018' : 'rgba(255,255,255,0.15)');
+      lampRG.addColorStop(0, pendantOn ? '#c89828' : 'rgba(255,255,255,0.40)');
+      lampRG.addColorStop(1, pendantOn ? '#906018' : 'rgba(255,255,255,0.15)');
       c.fillStyle = lampRG;
-      c.strokeStyle = D.pendant.on ? 'rgba(255,200,65,0.65)' : 'rgba(255,255,255,0.40)'; c.lineWidth = 1.2;
+      c.strokeStyle = pendantOn ? 'rgba(255,200,65,0.65)' : 'rgba(255,255,255,0.40)'; c.lineWidth = 1.2;
       c.beginPath(); c.arc(lx, lY, 15, 0, Math.PI * 2); c.fill(); c.stroke();
-      c.fillStyle = D.pendant.on ? '#e8b838' : 'rgba(255,255,255,0.30)';
+      c.fillStyle = pendantOn ? '#e8b838' : 'rgba(255,255,255,0.30)';
       c.beginPath(); c.arc(lx, lY, 9, 0, Math.PI * 2); c.fill();
-      if (D.pendant.on) {
+      if (pendantOn) {
         const inner = c.createRadialGradient(lx, lY, 0, lx, lY, 9);
         inner.addColorStop(0, 'rgba(255,248,190,1)');
         inner.addColorStop(1, 'rgba(200,150,50,0.3)');
         c.fillStyle = inner; c.beginPath(); c.arc(lx, lY, 9, 0, Math.PI * 2); c.fill();
       }
-      c.fillStyle = D.pendant.on ? 'rgba(255,255,220,0.95)' : 'rgba(255,255,255,0.30)';
+      c.fillStyle = pendantOn ? 'rgba(255,255,220,0.95)' : 'rgba(255,255,255,0.30)';
       c.beginPath(); c.arc(lx, lY, 3.5, 0, Math.PI * 2); c.fill();
     });
 
-    /* ── downlights ── */
+    // ── Downlights ──
     [
       [WX + WW * 0.28, WY + WH * 0.28], [WX + WW * 0.69, WY + WH * 0.28],
       [WX + WW * 0.28, WY + WH * 0.50], [WX + WW * 0.69, WY + WH * 0.50],
       [WX + WW * 0.28, WY + WH * 0.72], [WX + WW * 0.69, WY + WH * 0.72],
       [WX + WW * 0.48, WY + WH * 0.72],
-    ].forEach(([x, y]) => drawDownlight(c, x, y, D.lights.on, br, lr, lg, lb));
+    ].forEach(([x, y]) => drawDownlight(c, x, y, lights?.on ?? false, br, lr, lg, lb));
 
-    /* ── AC unit ── */
+    // ── AC unit ──
     const ACX = WX + WW - 51, ACY = WY + WH * 0.32, ACW = 40, ACH = 128;
-    const acOn = D.ac.on;
+    const acOn = ac?.on ?? false;
     if (acOn) {
       const [wr, wg, wb] = mc.w;
       for (let i = 0; i < 6; i++) {
@@ -234,33 +243,32 @@ export default function RoomLayout() {
       c.fillStyle = ledHalo; c.beginPath(); c.arc(ACX + ACW - 7, ACY + 6, 9, 0, Math.PI * 2); c.fill();
       c.fillStyle = mc.led; c.beginPath(); c.arc(ACX + ACW - 7, ACY + 6, 2.8, 0, Math.PI * 2); c.fill();
       c.font = "700 10px 'JetBrains Mono',monospace"; c.textAlign = 'center';
-      c.fillStyle = mc.temp; c.fillText(`${D.ac.temp}°`, ACX + ACW / 3, ACY + ACH - 4);
+      c.fillStyle = mc.temp; c.fillText(`${ac.temp}°`, ACX + ACW / 3, ACY + ACH - 4);
     }
 
-    /* ── curtain ── */
-    const CX = WX + WW * 0.28;
+    // ── Curtain ──
+    const CX  = WX + WW * 0.28;
     const CY2 = WY + WH - 19;
-    const CW = WW * 0.54;
-    const CH = 18;
-    const cO = D.curtain.pos / 100;
+    const CW  = WW * 0.54;
+    const CH  = 18;
+    const cPos = curtain?.pos ?? 0;
+    const cO   = cPos / 100;
 
-    /* valance */
+    // Valance
     const valG = c.createLinearGradient(CX - 1, CY2 - 10, CX - 6, CY2);
     valG.addColorStop(0, '#2a2018'); valG.addColorStop(1, '#1a1410');
     c.fillStyle = valG; c.fillRect(CX - 5, CY2 + 7, CW + 12, 10);
     c.strokeStyle = 'rgba(255,255,255,0.06)'; c.lineWidth = 0.2;
     c.strokeRect(CX - 5, CY2 + 7, CW + 12, 10);
-    /* rod */
+    // Rod
     c.fillStyle = '#0a0e18'; c.fillRect(CX - 6, CY2 + 8, CW + 14, 3);
-    /* end caps */
+    // End caps
     [[CX - 6, CY2 + 9], [CX + CW + 8, CY2 + 9]].forEach(([ex, ey]) => {
       c.fillStyle = 'rgba(120,160,220,0.35)';
       c.beginPath(); c.arc(ex, ey, 3, 0, Math.PI * 2); c.fill();
     });
-
-    const cpW = (CW / 2) * (1 - cO * 0.84);
+    const cpW    = (CW / 2) * (1 - cO * 0.84);
     const fabricY = CY2 - CH + 9;
-
     if (cpW > 3) {
       ['l', 'r'].forEach(side => {
         const cx2 = side === 'l' ? CX : CX + CW - cpW;
@@ -276,7 +284,7 @@ export default function RoomLayout() {
         }
         c.fillStyle = fabricG; rr(c, cx2, fabricY, cpW, CH, 5); c.fill();
         const foldCount = Math.max(12, Math.floor(cpW / 12));
-        const foldStep = cpW / foldCount;
+        const foldStep  = cpW / foldCount;
         for (let fi = 0; fi < foldCount; fi++) {
           const fx = cx2 + fi * foldStep, fw = foldStep;
           const shadowG = c.createLinearGradient(fx, 0, fx + fw * 0.35, 0);
@@ -312,10 +320,11 @@ export default function RoomLayout() {
       }
     }
 
-    /* ── fan ── */
-    const FCX = WX + WW * 0.48, FCY = WY + WH * 0.47;
-    if (D.fan.speed > 0) {
-      for (let r = 18; r <= 18 + D.fan.speed * 8; r += 8) {
+    // ── Fan ──
+    const FCX = WX + WW / 2, FCY = WY + WH * 0.44;
+    const fanSpeed = fan?.speed ?? 0;
+    if (fanSpeed > 0) {
+      for (let r = 18; r <= 18 + fanSpeed * 8; r += 8) {
         c.strokeStyle = `rgba(80,150,255,${Math.max(0, 0.06 - r * 0.001)})`; c.lineWidth = 0.4;
         c.beginPath(); c.arc(FCX, FCY, r, 0, Math.PI * 2); c.stroke();
       }
@@ -324,7 +333,7 @@ export default function RoomLayout() {
     [60, 180, 300].forEach(a => {
       c.save(); c.rotate(a * Math.PI / 180);
       const bG = c.createLinearGradient(0, -56, 0, 4);
-      bG.addColorStop(0, D.fan.speed > 0 ? 'rgba(255,255,255,0.60)' : 'rgba(255,255,255,0.60)');
+      bG.addColorStop(0, 'rgba(255,255,255,0.60)');
       bG.addColorStop(1, 'rgba(255,255,255,0.60)');
       c.fillStyle = bG; c.strokeStyle = 'rgba(255,255,255,0.60)'; c.lineWidth = 0.4;
       c.beginPath(); c.ellipse(0, -36, 9, 36, 0, 1, Math.PI * 3); c.fill(); c.stroke();
@@ -340,20 +349,19 @@ export default function RoomLayout() {
     c.fillStyle = 'rgba(255,255,255,0.70)';
     c.beginPath(); c.arc(FCX, FCY, 4, 0, Math.PI * 2); c.fill();
 
-    /* ── end scale ── */
-    c.restore();
-
+    c.restore(); // end scale
   }, []);
 
-
-
-  /* ── animation loop ── */
+  // ── Animation loop ──
   useEffect(() => {
     let raf;
     const loop = () => {
-      if (S.current.fan?.speed > 0)
-        fanAngleRef.current = (fanAngleRef.current + S.current.fan.speed * 5) % 360;
-      if (S.current.ac?.on)
+      const devs = S.current;
+      const fan     = devs ? byType(devs, "fan")     : null;
+      const ac      = devs ? byType(devs, "ac")      : null;
+      if (fan?.speed > 0)
+        fanAngleRef.current = (fanAngleRef.current + fan.speed * 5) % 360;
+      if (ac?.on)
         acWindRef.current = (acWindRef.current + 1.2) % 360;
       draw();
       raf = requestAnimationFrame(loop);
@@ -362,7 +370,7 @@ export default function RoomLayout() {
     return () => cancelAnimationFrame(raf);
   }, [draw]);
 
-  /* ── resize observer ── */
+  // ── Resize observer ──
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -371,7 +379,7 @@ export default function RoomLayout() {
         const { width, height } = entry.contentRect;
         const cv = canvasRef.current;
         if (!cv) return;
-        cv.width = Math.round(width);
+        cv.width  = Math.round(width);
         cv.height = Math.round(height);
         draw();
       }
@@ -381,9 +389,8 @@ export default function RoomLayout() {
   }, [draw]);
 
   return (
-    <div className="flex-1 w-full sm:min-h-0
-              rounded-2xl overflow-hidden
-              transition-all duration-400"
+    <div
+      className="flex-1 w-full sm:min-h-0 rounded-2xl overflow-hidden transition-all duration-400"
       ref={containerRef}
       style={{
         width: '100%',

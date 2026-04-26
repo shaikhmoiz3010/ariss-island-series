@@ -2,177 +2,254 @@ import { useRef } from "react";
 import ButtonRow from "./ButtonRow";
 import { useDeviceStore } from "../../state/useDeviceStore";
 
-export default function ButtonPanel({ setLeftState, setRightState, onActivity, onMotion, buttonTheme }) {
-  const {
-    devices,
-    toggleDimmer, toggleRelay, toggleScene, toggleFan, toggleAC,
-    toggleCurtain, cycleACFanSpd, toggleCCTMode,
-    setBrightness, setCCT, setFanSpeed, setACTemp, setCurtainPos,
-  } = useDeviceStore();
+// ─── Slot layout: [leftDeviceId, rightDeviceId] per row ──────────────────────
+// Slot positions never change. Only device.type within each slot changes.
+const ROWS = [
+  [0, 1],
+  [2, 3],
+  [4, 5],
+];
 
+// ─── isOn per device type ─────────────────────────────────────────────────────
+function isOn(device) {
+  if (!device) return false;
+  if (device.type === "fan")     return device.speed > 0;
+  if (device.type === "curtain") return device.moving;
+  return device.on;
+}
+
+// ─── Build tap/dbl/hold handlers for a device based on its current type ───────
+// setDisplay: the correct left or right state setter for this slot
+// startHold / stopHold: shared interval helpers keyed by device.id
+function buildHandlers({ device, setDisplay, startHold, stopHold, store }) {
+  const {
+    toggleDimmer, toggleRelay, toggleScene, toggleFan, toggleAC, toggleCurtain,
+    cycleACFanSpd, toggleCCTMode,
+    setBrightness, setCCT, setFanSpeed, setACTemp, setCurtainPos,
+  } = store;
+
+  const id   = device.id;
+  const noop = () => {};
+
+  // Helper: get fresh device state without stale closure
+  const fresh = () => useDeviceStore.getState().devices.find(x => x.id === id);
+
+  switch (device.type) {
+
+    case "dimmer": {
+      const tap = () => { toggleDimmer(id); setDisplay("dim"); };
+
+      const dbl = () => {
+        const cur = fresh();
+        toggleCCTMode(id);
+        setDisplay(cur.cctMode ? "dim" : "cct");
+      };
+
+      // holdStart receives an optional side ("l"|"r") for left-button CCT direction
+      const holdStart = (side = "l") => {
+        const cur = fresh();
+        if (!cur.on) toggleDimmer(id);
+        if (fresh().cctMode) {
+          let dir = side === "l" ? -100 : 100;
+          startHold(id, () => {
+            const c = fresh();
+            const next = Math.max(2700, Math.min(6500, c.cct + dir));
+            if (next >= 6500 || next <= 2700) dir *= -1;
+            setCCT(id, next);
+          }, 120);
+          setDisplay("cct");
+        } else {
+          const c = fresh();
+          let dir = c.bright >= 80 ? -1 : 1;
+          startHold(id, () => {
+            const c2 = fresh();
+            let next = Math.max(10, Math.min(100, c2.bright + dir * 2));
+            if (next >= 100 || next <= 10) dir *= -1;
+            setBrightness(id, next);
+          }, 80);
+          setDisplay("dim");
+        }
+      };
+
+      const holdEnd = () => {
+        stopHold(id);
+        setDisplay(fresh().cctMode ? "cct" : "dim");
+      };
+
+      return {
+        tap,
+        dbl,
+        holdStart,                          // called with side from ButtonRow
+        holdStartRight: () => holdStart("r"),
+        holdEnd,
+      };
+    }
+
+    case "relay":
+      return {
+        tap:  () => { toggleRelay(id); setDisplay("relay"); },
+        dbl:  noop,
+        holdStart: noop, holdStartRight: undefined, holdEnd: noop,
+      };
+
+    case "scene":
+      return {
+        tap: () => {
+          const on = fresh().on;
+          toggleScene(id);
+          setDisplay(on ? "approach" : "scene");
+        },
+        dbl:  noop,
+        holdStart: noop, holdStartRight: undefined, holdEnd: noop,
+      };
+
+    case "ac":
+      return {
+        tap: () => { toggleAC(id); setDisplay("ac"); },
+        dbl: () => { cycleACFanSpd(id); setDisplay("ac-spd"); },
+        holdStart: () => {
+          const cur = fresh();
+          if (!cur.on) toggleAC(id);
+          let dir = fresh().temp <= 18 ? 1 : -1;
+          startHold(id, () => {
+            const c = fresh();
+            let next = Math.max(16, Math.min(30, c.temp + dir));
+            if (next >= 30 || next <= 16) dir *= -1;
+            setACTemp(id, next);
+          }, 200);
+          setDisplay("ac-temp");
+        },
+        holdStartRight: undefined,
+        holdEnd: () => { stopHold(id); setDisplay("ac"); },
+      };
+
+    case "fan":
+      return {
+        tap: () => { toggleFan(id); setDisplay("fan"); },
+        dbl: () => {
+          const cur = fresh();
+          if (!cur.on) { toggleFan(id); setFanSpeed(id, 1); }
+          else { setFanSpeed(id, cur.speed >= 4 ? 1 : cur.speed + 1); }
+          setDisplay("fan");
+        },
+        holdStart: () => {
+          if (!fresh().on) toggleFan(id);
+          startHold(id, () => {
+            const c = fresh();
+            setFanSpeed(id, (c.speed % 4) + 1);
+          }, 650);
+          setDisplay("fan");
+        },
+        holdStartRight: undefined,
+        holdEnd: () => { stopHold(id); setDisplay("fan"); },
+      };
+
+    case "curtain":
+      return {
+        tap: () => {
+          toggleCurtain(id);
+          setDisplay(fresh().moving ? "curt" : "curt-move");
+        },
+        dbl: () => { toggleCurtain(id); setDisplay("curt-pause"); },
+        holdStart: () => {
+          let dir = fresh().pos >= 80 ? -1 : 1;
+          startHold(id, () => {
+            const c = fresh();
+            let next = Math.max(0, Math.min(100, c.pos + dir * 1.5));
+            if (next >= 100 || next <= 0) dir *= -1;
+            setCurtainPos(id, next);
+          }, 60);
+          setDisplay("curt-move");
+        },
+        holdStartRight: undefined,
+        holdEnd: () => { stopHold(id); setDisplay("curt-move"); },
+      };
+
+    default:
+      // Fallback: treat as relay
+      return {
+        tap:  () => { toggleRelay(id); setDisplay("relay"); },
+        dbl:  noop,
+        holdStart: noop, holdStartRight: undefined, holdEnd: noop,
+      };
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+export default function ButtonPanel({
+  setLeftState,
+  setRightState,
+  onActivity,
+  onMotion,
+  buttonTheme,
+}) {
+  const store    = useDeviceStore();
+  const { devices } = store;
   const holdInts = useRef({});
-  function d(id) { return devices.find((x) => x.id === id); }
+
+  function startHold(id, cb, ms = 80) {
+    clearInterval(holdInts.current[id]);
+    holdInts.current[id] = setInterval(cb, ms);
+  }
+  function stopHold(id) {
+    clearInterval(holdInts.current[id]);
+  }
 
   function activity() { onActivity(); onMotion(); }
-  function startHold(id, cb, ms = 80) { holdInts.current[id] = setInterval(cb, ms); }
-  function stopHold(id) { clearInterval(holdInts.current[id]); }
 
-  // ── 0: Dimmer ──────────────────────────────────────────────
-  function tapLights() { toggleDimmer(0); setLeftState("dim"); activity(); }
-  function dblLights() {
-    const c = d(0).cctMode;
-    toggleCCTMode(0);
-    setLeftState(c ? "dim" : "cct");
-    activity();
-  }
-  function holdLightsStart(side = "l") {
-    if (!d(0).on) toggleDimmer(0);
-    if (d(0).cctMode) {
-      let dir = side === "l" ? -100 : 100;
-      startHold(0, () => {
-        const cur = useDeviceStore.getState().devices.find((x) => x.id === 0);
-        const next = Math.max(2700, Math.min(6500, cur.cct + dir));
-        if (next >= 6500 || next <= 2700) dir *= -1;
-        setCCT(0, next);
-      }, 120);
-      setLeftState("cct");
-    } else {
-      let dir = d(0).bright >= 80 ? -1 : 1;
-      startHold(0, () => {
-        const cur = useDeviceStore.getState().devices.find((x) => x.id === 0);
-        let next = Math.max(10, Math.min(100, cur.bright + dir * 2));
-        if (next >= 100 || next <= 10) dir *= -1;
-        setBrightness(0, next);
-      }, 80);
-      setLeftState("dim");
-    }
-    activity();
-  }
-  function holdLightsEnd() { stopHold(0); setLeftState(d(0).cctMode ? "cct" : "dim"); }
+  // Wrap a setter so every display change also fires activity()
+  const wrapSetter = (setter) => (s) => { setter(s); activity(); };
 
-  // ── 1: Relay ───────────────────────────────────────────────
-  function tapPendant() { toggleRelay(1); setRightState("relay"); activity(); }
+  const leftSetter  = wrapSetter(setLeftState);
+  const rightSetter = wrapSetter(setRightState);
 
-  // ── 2: Scene ───────────────────────────────────────────────
-  function tapNight() {
-    const on = d(2).on;
-    toggleScene(2);
-    setLeftState(on ? "approach" : "scene");
-    activity();
-  }
+  function d(id) { return devices.find(x => x.id === id); }
 
-  // ── 3: AC ──────────────────────────────────────────────────
-  function tapAC() { toggleAC(3); setRightState("ac"); activity(); }
-  function dblAC() { cycleACFanSpd(3); setRightState("ac-spd"); activity(); }
-  function holdACStart() {
-    if (!d(3).on) toggleAC(3);
-    let dir = d(3).temp <= 18 ? 1 : -1;
-    startHold(3, () => {
-      const cur = useDeviceStore.getState().devices.find((x) => x.id === 3);
-      let next = Math.max(16, Math.min(30, cur.temp + dir));
-      if (next >= 30 || next <= 16) dir *= -1;
-      setACTemp(3, next);
-    }, 200);
-    setRightState("ac-temp");
-    activity();
-  }
-  function holdACEnd() { stopHold(3); setRightState("ac"); }
-
-  // ── 4: Fan ─────────────────────────────────────────────────
-  function tapFan() { toggleFan(4); setLeftState("fan"); activity(); }
-
-  function dblFan() {
-  /* double tap — cycle speed up, wraps back to 1 after max */
-  const cur = d(4);
-  if (!cur.on) {
-    toggleFan(4);
-    setFanSpeed(4, 1);
-  } else {
-    const next = cur.speed >= 4 ? 1 : cur.speed + 1;
-    setFanSpeed(4, next);
-  }
-  setLeftState("fan");
-  activity();
-}
-
-
-  function holdFanStart() {
-    if (!d(4).on) toggleFan(4);
-    startHold(4, () => {
-      const cur = useDeviceStore.getState().devices.find((x) => x.id === 4);
-      setFanSpeed(4, (cur.speed % 4) + 1);
-    }, 650);
-    setLeftState("fan");
-    activity();
-  }
-  function holdFanEnd() { stopHold(4); setLeftState("fan"); }
-
-  // ── 5: Curtain ─────────────────────────────────────────────
-function tapCurtain() {
-  toggleCurtain(5);
-  /* show move display if curtain is now moving, status if stopped */
-  setRightState(d(5).moving ? "curt" : "curt-move");
-  activity();
-}
-
-function dblCurtain() {
-  toggleCurtain(5);
-  setRightState("curt-pause");    /* pause icon + slider */
-  activity();
-}
-
-function holdCurtainStart() {
-  let dir = d(5).pos >= 80 ? -1 : 1;
-  startHold(5, () => {
-    const cur = useDeviceStore.getState().devices.find((x) => x.id === 5);
-    let next = Math.max(0, Math.min(100, cur.pos + dir * 1.5));
-    if (next >= 100 || next <= 0) dir *= -1;
-    setCurtainPos(5, next);
-  }, 60);
-  setRightState("curt-move");     /* animated slider */
-  activity();
-}
-
-function holdCurtainEnd() {
-  stopHold(5);
-  setRightState("curt-move");
-}
   return (
     <div className="py-[5px] flex flex-col gap-0">
-      {/* Row 1 — Lights | Switch */}
-      <ButtonRow
-        labelL="Lights"  labelR="Switch"
-        onL={d(0)?.on}   onR={d(1)?.on}
-        isFirst
-        buttonTheme={buttonTheme}
-        onTapL={tapLights}    onDoubleTapL={dblLights}
-        onHoldStartL={() => holdLightsStart("l")}
-        onHoldStartLRight={() => holdLightsStart("r")}
-        onHoldEndL={holdLightsEnd}
-        onTapR={tapPendant}
-      />
+      {ROWS.map(([lId, rId], rowIdx) => {
+        const dL = d(lId);
+        const dR = d(rId);
 
-      {/* Row 2 — Scene | AC */}
-      <ButtonRow
-        labelL="Scene"  labelR="AC"
-        onL={d(2)?.on}  onR={d(3)?.on}
-        buttonTheme={buttonTheme}
-        onTapL={tapNight}
-        onTapR={tapAC}        onDoubleTapR={dblAC}
-        onHoldStartR={holdACStart} onHoldEndR={holdACEnd}
-      />
+        // Build handlers fresh on every render so type changes are picked up immediately
+        const hL = dL ? buildHandlers({
+          device: dL,
+          setDisplay: leftSetter,
+          startHold, stopHold,
+          store,
+        }) : {};
 
-      {/* Row 3 — Fan | Curtain */}
-      <ButtonRow
-        labelL="Fan"    labelR="Curtain"
-        onL={d(4)?.speed > 0} onR={d(5)?.moving}
-        isLast
-        buttonTheme={buttonTheme}
-        onTapL={tapFan}        onHoldStartL={holdFanStart} onHoldEndL={holdFanEnd}
-        onTapR={tapCurtain}    onDoubleTapR={dblCurtain}
-        onHoldStartR={holdCurtainStart} onHoldEndR={holdCurtainEnd}
-        onDoubleTapL={dblFan}
-      />
+        const hR = dR ? buildHandlers({
+          device: dR,
+          setDisplay: rightSetter,
+          startHold, stopHold,
+          store,
+        }) : {};
+
+        return (
+          <ButtonRow
+            key={`row-${rowIdx}`}
+            labelL={dL?.label ?? "—"}
+            labelR={dR?.label ?? "—"}
+            onL={isOn(dL)}
+            onR={isOn(dR)}
+            isFirst={rowIdx === 0}
+            isLast={rowIdx === ROWS.length - 1}
+            buttonTheme={buttonTheme}
+            // Left half
+            onTapL={hL.tap}
+            onDoubleTapL={hL.dbl}
+            onHoldStartL={hL.holdStart}
+            onHoldStartLRight={hL.holdStartRight}
+            onHoldEndL={hL.holdEnd}
+            // Right half
+            onTapR={hR.tap}
+            onDoubleTapR={hR.dbl}
+            onHoldStartR={hR.holdStart}
+            onHoldEndR={hR.holdEnd}
+          />
+        );
+      })}
     </div>
   );
 }
