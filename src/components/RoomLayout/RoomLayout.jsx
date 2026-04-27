@@ -18,58 +18,168 @@ function cctRgb(k) {
 }
 function drawDownlight(c, x, y, on, br, lr, lg, lb) {
   if (on && br > 0) {
-    const pool = c.createRadialGradient(x, y, 0, x, y, 55 + br * 35);
-    pool.addColorStop(0, `rgba(${lr},${lg},${lb},${0.22 * br})`);
-    pool.addColorStop(0.4, `rgba(${lr},${lg},${lb},${0.10 * br})`);
-    pool.addColorStop(1, `rgba(${lr},${lg},${lb},0)`);
+    const pool = c.createRadialGradient(x, y, 0, x, y, 56 + br * 55);
+    pool.addColorStop(0,   `rgba(${lr},${lg},${lb},${0.42 * br})`);
+    pool.addColorStop(0.1, `rgba(${lr},${lg},${lb},${0.20 * br})`);
+    pool.addColorStop(1,   `rgba(${lr},${lg},${lb},0)`);
     c.fillStyle = pool;
-    c.beginPath(); c.arc(x, y, 55 + br * 35, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.arc(x, y, 95 + br * 85, 0, Math.PI * 2); c.fill();
   }
-  c.strokeStyle = on ? `rgba(${lr},${lg},${lb},${0.75 + br * 0.25})` : 'rgba(255,255,255,0.99)';
-  c.lineWidth = on ? 1.4 : 0.8;
-  c.beginPath(); c.arc(x, y, 5, 0, Math.PI * 2); c.stroke();
-  if (on) {
-    const hs = c.createRadialGradient(x, y, 0, x, y, 6);
-    hs.addColorStop(0, `rgba(${lr},${lg},${lb},1)`);
-    hs.addColorStop(1, `rgba(${lr},${lg},${lb},0)`);
-    c.fillStyle = hs; c.beginPath(); c.arc(x, y, 6, 0, Math.PI * 2); c.fill();
-  }
+  // c.lineWidth = on ? 1.4 : 0.1;
+  // c.beginPath(); c.arc(x, y, 5, 0, Math.PI * 2); c.stroke();
 }
-const AC_MODES = ['COOL', 'HOT', 'AUTO', 'DRY'];
+
 const MODE_CFG = {
-  COOL: { w: [64, 160, 255], border: 'rgba(64,144,224,0.65)', led: '#2090ff', spread: 'rgba(64,144,224,0.12)', b0: '#0e1e36', b1: '#060e1e', swing: 'rgba(80,170,255,0.80)', temp: 'rgba(110,195,255,0.92)', lbl: 'rgba(80,170,255,0.75)' },
-  HOT:  { w: [255, 140, 60], border: 'rgba(255,110,35,0.65)', led: '#ff5510', spread: 'rgba(255,130,50,0.12)', b0: '#281408', b1: '#180c04', swing: 'rgba(255,155,75,0.80)', temp: 'rgba(255,165,85,0.92)', lbl: 'rgba(255,135,55,0.75)' },
-  AUTO: { w: [100, 220, 130], border: 'rgba(70,195,110,0.60)', led: '#28b855', spread: 'rgba(80,200,115,0.10)', b0: '#0c1e10', b1: '#06100a', swing: 'rgba(95,215,130,0.75)', temp: 'rgba(115,225,140,0.92)', lbl: 'rgba(95,215,130,0.75)' },
-  DRY:  { w: [90, 195, 255], border: 'rgba(70,190,255,0.55)', led: '#35ccff', spread: 'rgba(90,185,255,0.09)', b0: '#0c1e2c', b1: '#060e18', swing: 'rgba(110,205,255,0.75)', temp: 'rgba(115,210,255,0.92)', lbl: 'rgba(95,205,255,0.75)' },
+  COOL: { w: [64,  160, 255], led: '#2090ff', temp: 'rgba(110,195,255,0.92)', core: [180, 235, 255] },
+  HOT:  { w: [255, 140,  60], led: '#ff5510', temp: 'rgba(255,165,85,0.92)',  core: [255, 220, 190] },
+  AUTO: { w: [100, 220, 130], led: '#28b855', temp: 'rgba(115,225,140,0.92)', core: [200, 255, 220] },
+  DRY:  { w: [ 90, 195, 255], led: '#35ccff', temp: 'rgba(115,210,255,0.92)', core: [170, 230, 255] },
 };
+
 const BG_IMAGE_URL = room;
 const DW = 600, DH = 500;
-
-// Speed step → degrees-per-frame when running
 const SPEED_TO_DPF = { 1: 6, 2: 10, 3: 14, 4: 19 };
-
-// Deceleration rate: degrees-per-frame² (how fast angular velocity bleeds off)
 const DECEL = 0.12;
 
 function byType(devices, type) {
   return devices.find(d => d.type === type) ?? null;
 }
 
+// ─── Draw one sonar arc wave ───────────────────────────────────────────────────
+// cx, cy  : origin point (the AC vent)
+// radius  : current radius of this arc
+// phase   : 0..1 lifecycle — controls alpha and line weight
+// wr,wg,wb: mode colour
+// cr,cg,cb: core (bright) colour
+// arcSpan : how many radians the arc spans (partial circle facing left)
+function drawSonarArc(c, cx, cy, radius, phase, wr, wg, wb, cr, cg, cb) {
+  if (radius <= 0) return;
+
+  // Fade: starts faint when tiny, peaks in mid-life, fades at full size
+  const alpha     = Math.pow(Math.sin(phase * Math.PI), 1.1) * 0.5;
+  if (alpha < 0.02) return;
+
+  // Arc spans roughly 140° facing LEFT (the direction air flows)
+  // Centred on the horizontal-left direction from the vent
+  const arcHalf   = (70 * Math.PI) / 280;   // 70° either side of leftward direction
+  const startAng  = Math.PI - arcHalf;       // pointing upper-left
+  const endAng    = Math.PI + arcHalf;       // pointing lower-left
+
+  // Line gets thinner as it expands
+  const glowW = (3.5 + (1 - phase) * 1) * (0.6 + alpha * 0.04);
+  const coreW = (1.0 + (0 - phase) * 1.0);
+
+  // ── Outer glow ──
+  c.beginPath();
+  c.arc(cx, cy, radius, startAng, endAng);
+  c.strokeStyle = `rgba(${wr},${wg},${wb},${alpha * 0.015})`;
+  c.lineWidth   = glowW * 1.2;
+  c.lineCap     = 'round';
+  c.stroke();
+
+  // ── Mid glow ──
+  c.beginPath();
+  c.arc(cx, cy, radius, startAng, endAng);
+  c.strokeStyle = `rgba(${wr},${wg},${wb},${alpha * 0.35})`;
+  c.lineWidth   = glowW;
+  c.lineCap     = 'round';
+  c.stroke();
+
+  // ── Bright core ──
+  c.beginPath();
+  c.arc(cx, cy, radius, startAng, endAng);
+  c.strokeStyle = `rgba(${cr},${cg},${cb},${alpha * 0.015})`;
+  c.lineWidth   = coreW;
+  c.lineCap     = 'round';
+  c.stroke();
+}
+
+// ─── Curtain panel ────────────────────────────────────────────────────────────
+function drawCurtainPanel(c, cx, cy, pw, ph, side, br, lr, lg, lb) {
+  if (pw < 2) return;
+  const pleatCount = Math.max(8, Math.floor(pw / 8));
+  const pleatW     = pw / pleatCount;
+
+  const fabricBase = c.createLinearGradient(0, cy, 0, cy + ph);
+  fabricBase.addColorStop(0,   'hsl(34,44%,70%)');
+  fabricBase.addColorStop(0.4, 'hsl(34,44%,68%)');
+  fabricBase.addColorStop(1,   'hsl(34,40%,58%)');
+  c.fillStyle = fabricBase;
+  rr(c, cx, cy, pw, ph, 3); c.fill();
+
+  for (let p = 0; p < pleatCount; p++) {
+    const px      = cx + p * pleatW;
+    const isFront = (p % 2 === (side === 'l' ? 0 : 1));
+    const lightL  = isFront ? 76 : 52;
+    const shadowL = isFront ? 62 : 42;
+
+    const faceG = c.createLinearGradient(px, 0, px + pleatW, 0);
+    faceG.addColorStop(0,    `hsl(34,44%,${lightL + 6}%)`);
+    faceG.addColorStop(0.35, `hsl(34,44%,${lightL}%)`);
+    faceG.addColorStop(0.72, `hsl(34,42%,${(lightL + shadowL) / 2}%)`);
+    faceG.addColorStop(1,    `hsl(34,40%,${shadowL}%)`);
+    c.fillStyle = faceG; c.fillRect(px, cy, pleatW, ph);
+
+    const creaseW = Math.min(pleatW * 0.22, 4);
+    const creaseG = c.createLinearGradient(px, 0, px + creaseW, 0);
+    creaseG.addColorStop(0, `rgba(0,0,0,${isFront ? 0.18 : 0.32})`);
+    creaseG.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = creaseG; c.fillRect(px, cy, creaseW, ph);
+
+    if (isFront) {
+      const sheenG = c.createLinearGradient(px + pleatW * 0.15, 0, px + pleatW * 0.65, 0);
+      sheenG.addColorStop(0,   'rgba(255,255,255,0)');
+      sheenG.addColorStop(0.4, 'rgba(255,255,255,0.10)');
+      sheenG.addColorStop(1,   'rgba(255,255,255,0)');
+      c.fillStyle = sheenG; c.fillRect(px, cy, pleatW, ph);
+    }
+    if (pleatW > 6) {
+      c.strokeStyle = 'rgba(0,0,0,0.06)'; c.lineWidth = 0.4;
+      for (let tx = px + pleatW * 0.5; tx < px + pleatW - 1; tx += 3.5) {
+        c.beginPath(); c.moveTo(tx, cy + 2); c.lineTo(tx, cy + ph - 2); c.stroke();
+      }
+    }
+  }
+
+  const hemH = Math.max(3, ph * 0.10);
+  const hemG = c.createLinearGradient(0, cy, 0, cy + hemH);
+  hemG.addColorStop(0, 'hsl(34,42%,54%)'); hemG.addColorStop(1, 'hsl(34,42%,60%)');
+  c.fillStyle = hemG; c.fillRect(cx, cy, pw, hemH);
+  c.strokeStyle = 'rgba(255,255,255,0.18)'; c.lineWidth = 0.8;
+  c.beginPath(); c.moveTo(cx + 2, cy + 1); c.lineTo(cx + pw - 2, cy + 1); c.stroke();
+
+  const bHemG = c.createLinearGradient(0, cy + ph - hemH, 0, cy + ph);
+  bHemG.addColorStop(0, 'rgba(0,0,0,0)'); bHemG.addColorStop(1, 'rgba(0,0,0,0.22)');
+  c.fillStyle = bHemG; c.fillRect(cx, cy + ph - hemH, pw, hemH);
+
+  const edgeW = Math.min(pw * 0.08, 5);
+  const edgeG = c.createLinearGradient(
+    side === 'l' ? cx + pw - edgeW : cx, 0,
+    side === 'l' ? cx + pw         : cx - edgeW, 0
+  );
+  edgeG.addColorStop(0, 'rgba(0,0,0,0.30)'); edgeG.addColorStop(1, 'rgba(0,0,0,0)');
+  c.fillStyle = edgeG;
+  c.fillRect(side === 'l' ? cx + pw - edgeW : cx, cy, edgeW, ph);
+
+  if (br > 0) {
+    c.fillStyle = `rgba(${lr},${lg},${lb},${0.07 * br})`;
+    c.fillRect(cx, cy, pw, ph);
+  }
+  c.strokeStyle = 'hsl(34,36%,42%)'; c.lineWidth = 0.6;
+  rr(c, cx, cy, pw, ph, 3); c.stroke();
+}
+
 export default function RoomLayout() {
   const canvasRef    = useRef(null);
   const containerRef = useRef(null);
-
-  // Fan physics
-  const fanAngleRef   = useRef(0);   // current blade angle (degrees)
-  const fanVelocRef   = useRef(0);   // current angular velocity (deg/frame)
-
-  const acWindRef    = useRef(0);
+  const fanAngleRef  = useRef(0);
+  const fanVelocRef  = useRef(0);
+  const acPhaseRef   = useRef(0);   // 0..1, drives arc expansion
   const bgImageRef   = useRef(null);
   const bgReadyRef   = useRef(false);
   const S            = useRef([]);
 
   const { devices } = useDeviceStore();
-
   useEffect(() => { S.current = devices; }, [devices]);
 
   useEffect(() => {
@@ -85,7 +195,6 @@ export default function RoomLayout() {
     if (!canvas) return;
     const c = canvas.getContext('2d');
     const W = canvas.width, H = canvas.height;
-
     const devs = S.current;
     if (!devs || devs.length === 0) return;
 
@@ -100,11 +209,13 @@ export default function RoomLayout() {
     const cct = lights?.cct ?? 4000;
     const [lr, lg, lb] = cctRgb(cct);
 
-    const fa     = fanAngleRef.current;
-    const fanVel = fanVelocRef.current;   // used to draw motion blur alpha
-    const acWind = acWindRef.current;
-    const acMode = (ac?.mode && MODE_CFG[ac.mode]) ? ac.mode : 'COOL';
-    const mc     = MODE_CFG[acMode];
+    const fa      = fanAngleRef.current;
+    const fanVel  = fanVelocRef.current;
+    const acPhase = acPhaseRef.current;
+    const acMode  = (ac?.mode && MODE_CFG[ac.mode]) ? ac.mode : 'COOL';
+    const mc      = MODE_CFG[acMode];
+    const [wr, wg, wb] = mc.w;
+    const [cr, cg, cb] = mc.core;
 
     c.clearRect(0, 0, W, H);
     c.save();
@@ -117,7 +228,7 @@ export default function RoomLayout() {
     c.save();
     rr(c, WX, WY, WW, WH, 12); c.clip();
     if (bgReadyRef.current && bgImageRef.current) {
-      const img = bgImageRef.current;
+      const img    = bgImageRef.current;
       const imgAR  = img.width / img.height;
       const roomAR = WW / WH;
       let sx = 2, sy = 1, sw = img.width, sh = img.height;
@@ -129,12 +240,11 @@ export default function RoomLayout() {
       flG.addColorStop(0, 'rgba(22,32,52,1)'); flG.addColorStop(1, 'rgba(10,16,28,1)');
       c.fillStyle = flG; c.fillRect(WX, WY, WW, WH);
     }
-
     if (br > 0) {
       const ag = c.createRadialGradient(WX + WW / 2, WY + WH * 0.38, 0, WX + WW / 2, WY + WH * 0.38, WW * 0.75);
-      ag.addColorStop(0, `rgba(${lr},${lg},${lb},${0.12 * br})`);
+      ag.addColorStop(0,   `rgba(${lr},${lg},${lb},${0.12 * br})`);
       ag.addColorStop(0.5, `rgba(${lr},${lg},${lb},${0.04 * br})`);
-      ag.addColorStop(1, `rgba(${lr},${lg},${lb},0)`);
+      ag.addColorStop(1,   `rgba(${lr},${lg},${lb},0)`);
       c.fillStyle = ag; c.fillRect(WX, WY, WW, WH);
     }
     if (scene?.on) {
@@ -148,12 +258,12 @@ export default function RoomLayout() {
     const sT = 5, gS = 50 + br * 44;
     if (br > 0) {
       const grad = c.createLinearGradient(0, WY + sT, 0, WY + sT + gS);
-      grad.addColorStop(0, `rgba(${lr},${lg},${lb},${0.42 * br})`);
+      grad.addColorStop(0,    `rgba(${lr},${lg},${lb},${0.42 * br})`);
       grad.addColorStop(0.35, `rgba(${lr},${lg},${lb},${0.14 * br})`);
-      grad.addColorStop(1, `rgba(${lr},${lg},${lb},0)`);
+      grad.addColorStop(1,    `rgba(${lr},${lg},${lb},0)`);
       c.fillStyle = grad; c.fillRect(WX, WY + sT, WW, gS);
     }
-    c.fillStyle = br > 0 ? `rgba(${lr},${lg},${lb},0.92)` : 'rgba(255,255,255,0.50)';
+    c.fillStyle = br > 0 ? `rgba(${lr},${lg},${lb},0.92)` : 'rgba(255,255,255,0.05)';
     c.fillRect(WX, WY, WW, sT);
     if (br > 0) {
       c.fillStyle = `rgba(${lr},${lg},${lb},1)`;
@@ -170,155 +280,157 @@ export default function RoomLayout() {
     [lLX, lRX].forEach(lx => {
       if (pendantOn) {
         const lg3 = c.createRadialGradient(lx, lY, 0, lx, lY, 55);
-        lg3.addColorStop(0, 'rgba(255,185,55,0.65)');
-        lg3.addColorStop(0.4, 'rgba(255,185,55,0.4)');
-        lg3.addColorStop(1, 'rgba(255,185,55,0)');
+        lg3.addColorStop(0,   'rgba(255,185,55,0.65)');
+        lg3.addColorStop(0.4, 'rgba(255,185,55,0.40)');
+        lg3.addColorStop(1,   'rgba(255,185,55,0)');
         c.fillStyle = lg3; c.beginPath(); c.arc(lx, lY, 55, 0, Math.PI * 2); c.fill();
       }
-      const lampRG = c.createRadialGradient(lx, lY, 0, lx, lY, 16);
-      // lampRG.addColorStop(0, pendantOn ? 'rgba(255,185,55,0.1)' : 'rgba(255,255,255,0.01)');
-      // lampRG.addColorStop(1, pendantOn ? 'rgba(255,185,55,0.3)' : 'rgba(255,255,255,0.01)');
-      // c.fillStyle = lampRG;
-      c.strokeStyle = pendantOn ? 'rgba(255,200,65,0.05)' : 'rgba(255,255,255,0.010)'; c.lineWidth = 1.2;
-      // c.beginPath(); c.arc(lx, lY, 15, 0, Math.PI * 2); c.fill(); c.stroke();
-      // c.fillStyle = pendantOn ? '#e8b838' : 'rgba(255,255,255,0.010)';
-      // c.beginPath(); c.arc(lx, lY, 9, 0, Math.PI * 2); c.fill();
-      if (pendantOn) {
-        const inner = c.createRadialGradient(lx, lY, 0, lx, lY, 9);
-        // inner.addColorStop(0, 'rgba(255,248,190,1)');
-        // inner.addColorStop(1, 'rgba(200,150,50,0.3)');
-        // c.fillStyle = inner; c.beginPath(); c.arc(lx, lY, 9, 0, Math.PI * 2); c.fill();
-      }
-      // c.fillStyle = pendantOn ? 'rgba(255,255,220,0.95)' : 'rgba(255,255,255,0.010)';
-      // c.beginPath(); c.arc(lx, lY, 3.5, 0, Math.PI * 2); c.fill();
     });
 
     // ── Downlights ──
     [
-      [WX + WW * 0.24, WY + WH * 0.28], [WX + WW * 0.75, WY + WH * 0.28],
-      [WX + WW * 0.24, WY + WH * 0.50], [WX + WW * 0.75, WY + WH * 0.50],
-      [WX + WW * 0.24, WY + WH * 0.72], [WX + WW * 0.75, WY + WH * 0.72],
-      [WX + WW * 0.48, WY + WH * 0.72],
+      [WX + WW * 0.24, WY + WH * 0.34], [WX + WW * 0.75, WY + WH * 0.34],
+      [WX + WW * 0.24, WY + WH * 0.53], [WX + WW * 0.75, WY + WH * 0.53],
+      [WX + WW * 0.24, WY + WH * 0.78], [WX + WW * 0.75, WY + WH * 0.78],
+      [WX + WW * 0.50, WY + WH * 0.78],
     ].forEach(([x, y]) => drawDownlight(c, x, y, lights?.on ?? false, br, lr, lg, lb));
 
-    // ── AC unit ──
-    const ACX = WX + WW - 45, ACY = WY + WH * 0.35, ACW = 10, ACH = 145;
+    // ══ AC UNIT + SONAR ARC WAVES ══════════════════════════════════════════════
+    const ACX = WX + WW - 45;
+    const ACY = WY + WH * 0.35;
+    const ACW = 10;
+    const ACH = 145;
     const acOn = ac?.on ?? false;
+
+    const ventX = ACX - 11;
+    const ventY = ACY + ACH * 0.42;
+
     if (acOn) {
-      const [wr, wg, wb] = mc.w;
-      for (let i = 0; i < 6; i++) {
-        const offset = ((acWind * 1.0 + i * 15) % 95);
-        const wx2 = ACX - 4 - offset, wy2 = ACY + 18 + i * 13;
-        const wLen = 22 + Math.sin((acWind * 0.05 + i * 0.8)) * 8;
-        const alpha = Math.max(0, 0.65 - offset / 95 * 0.65);
-        c.strokeStyle = `rgba(${wr},${wg},${wb},${alpha})`; c.lineWidth = 1.4; c.lineCap = 'round';
-        c.beginPath(); c.moveTo(wx2, wy2);
-        c.bezierCurveTo(wx2 - wLen * 0.28, wy2 - 4, wx2 - wLen * 0.72, wy2 + 4, wx2 - wLen, wy2); c.stroke();
+      // Clip to left of wall so arcs don't draw behind the AC unit
+      c.save();
+      c.beginPath(); c.rect(WX, WY, ventX - WX + 2, WH); c.clip();
+
+      // Soft ambient room glow
+      const roomGlow = c.createRadialGradient(ventX, ventY, 0, ventX - 180, ventY, 350);
+      roomGlow.addColorStop(0,    `rgba(${wr},${wg},${wb},0.06)`);
+      roomGlow.addColorStop(0.40, `rgba(${wr},${wg},${wb},0.025)`);
+      roomGlow.addColorStop(1,    `rgba(${wr},${wg},${wb},0)`);
+      c.fillStyle = roomGlow; c.fillRect(WX, WY, WW, WH);
+
+      // ── 5 arc waves, evenly staggered in phase ──
+      // Max radius: arcs expand up to ~430px (most of room width)
+      const ARC_COUNT  = 4;
+      const MAX_RADIUS = 430;
+
+      for (let i = 0; i < ARC_COUNT; i++) {
+        // Each arc has its own lifecycle phase offset by 1/ARC_COUNT
+        const arcPhase  = (acPhase + i / ARC_COUNT) % 1.0;
+        const radius    = arcPhase * MAX_RADIUS;
+        drawSonarArc(c, ventX, ventY, radius, arcPhase, wr, wg, wb, cr, cg, cb);
       }
-      c.lineCap = 'butt';
+
+      c.restore();
+
+      // Vent glow (always on, gentle pulse)
+      const pulse = 0.28 + Math.sin(acPhase * Math.PI * 0) * 0.08;
+      const halo  = c.createRadialGradient(ventX, ventY, 0, ventX, ventY, 28);
+      // halo.addColorStop(0,   `rgba(${cr},${cg},${cb},${pulse})`);
+      halo.addColorStop(0.4, `rgba(${wr},${wg},${wb},${pulse * 0.35})`);
+      halo.addColorStop(1,   `rgba(${wr},${wg},${wb},0)`);
+      c.fillStyle = halo;
+      c.beginPath(); c.ellipse(ventX - 3, ventY, 48, 100, 10, 0, Math.PI * 2); c.fill();
+
+      // AC LED & temp
       const ledHalo = c.createRadialGradient(ACX + ACW - 7, ACY + 6, 0, ACX + ACW - 7, ACY + 6, 9);
-      ledHalo.addColorStop(0, `rgba(${mc.w[0]},${mc.w[1]},${mc.w[2]},0.55)`);
-      ledHalo.addColorStop(1, `rgba(${mc.w[0]},${mc.w[1]},${mc.w[2]},0)`);
+      ledHalo.addColorStop(0, `rgba(${wr},${wg},${wb},0.55)`);
+      ledHalo.addColorStop(1, `rgba(${wr},${wg},${wb},0)`);
       c.fillStyle = ledHalo; c.beginPath(); c.arc(ACX + ACW - 7, ACY + 6, 9, 0, Math.PI * 2); c.fill();
-      c.fillStyle = mc.led; c.beginPath(); c.arc(ACX + ACW - 7, ACY + 6, 2.8, 0, Math.PI * 2); c.fill();
+      c.fillStyle = mc.led;  c.beginPath(); c.arc(ACX + ACW - 7, ACY + 6, 2.8, 0, Math.PI * 2); c.fill();
       c.font = "700 10px 'JetBrains Mono',monospace"; c.textAlign = 'center';
       c.fillStyle = mc.temp; c.fillText(`${ac.temp}°`, ACX + ACW / 3, ACY + ACH - 4);
     }
 
-    // ── Curtain ──
-    const CX  = WX + WW * 0.19;
-    const CY2 = WY + WH - 15;
-    const CW  = WW * 0.55;
-    const CH  = 18;
+    // ══ CURTAIN ════════════════════════════════════════════════════════════════
+    const CX   = WX + WW * 0.15;
+    const CY2  = WY + WH - 25;
+    const CW   = WW * 0.65;
+    const CH   = 20;
     const cPos = curtain?.pos ?? 0;
     const cO   = cPos / 100;
 
-    const valG = c.createLinearGradient(CX - 1, CY2 - 10, CX - 6, CY2);
-    valG.addColorStop(0, '#2a2018'); valG.addColorStop(1, '#1a1410');
-    c.fillStyle = valG; c.fillRect(CX - 5, CY2 + 7, CW + 12, 10);
-    c.strokeStyle = 'rgba(255,255,255,0.06)'; c.lineWidth = 0.2;
-    c.strokeRect(CX - 5, CY2 + 7, CW + 12, 10);
-    c.fillStyle = '#0a0e18'; c.fillRect(CX - 6, CY2 + 8, CW + 14, 3);
-    [[CX - 6, CY2 + 9], [CX + CW + 8, CY2 + 9]].forEach(([ex, ey]) => {
-      c.fillStyle = 'rgba(120,160,220,0.35)';
-      c.beginPath(); c.arc(ex, ey, 3, 0, Math.PI * 2); c.fill();
+    c.fillStyle = 'rgba(0,0,0,0.28)';
+    // c.fillRect(CX - 5, CY2 + 11, CW + 14, 4);
+    const rodG = c.createLinearGradient(0, CY2 + 15, 0, CY2 + 13);
+    // rodG.addColorStop(0,    '#7a7a8c'); rodG.addColorStop(0.25, '#c0c0d2');
+    rodG.addColorStop(0.55, '#e8e8f4'); rodG.addColorStop(0.75, '#9090a4');
+    rodG.addColorStop(1,    '#585868');
+    c.fillStyle = rodG; c.fillRect(CX - 6, CY2 + 15, CW + 14, 6);
+    // c.strokeStyle = 'rgba(255,255,255,0.35)'; c.lineWidth = 0.6;
+    c.beginPath(); c.moveTo(CX - 4, CY2 + 7.5); c.lineTo(CX + CW + 6, CY2 + 7.5); c.stroke();
+    for (let rv = CX + 20; rv < CX + CW - 10; rv += 45) {
+      const rvG = c.createRadialGradient(rv, CY2 + 10, 0, rv, CY2 + 10, 3);
+      // rvG.addColorStop(0, 'rgba(255,255,255,0.22)'); rvG.addColorStop(1, 'rgba(0,0,0,0.12)');
+      // c.fillStyle = rvG; c.beginPath(); c.arc(rv, CY2 + 10, 2.5, 0, Math.PI * 2); c.fill();
+    }
+    [[CX - 10, CY2 + 17], [CX + CW + 9, CY2 + 17]].forEach(([ex, ey]) => {
+      const capG = c.createRadialGradient(ex, ey - 1.5, 0, ex, ey, 6);
+      capG.addColorStop(0, '#e0e0f0'); capG.addColorStop(0.4, '#a0a0b8'); capG.addColorStop(1, '#404050');
+      c.fillStyle = capG; c.beginPath(); c.arc(ex, ey, 6, 0, Math.PI * 2); c.fill();
+      c.strokeStyle = 'rgba(255,255,255,0.18)'; c.lineWidth = 0.8;
+      c.beginPath(); c.arc(ex, ey, 6, 0, Math.PI * 2); c.stroke();
     });
+    const ringCount = Math.ceil(CW / 30);
+    for (let ri = 0; ri <= ringCount; ri++) {
+      const rx = CX + (ri / ringCount) * CW;
+      // c.strokeStyle = 'rgba(160,160,180,0.45)'; c.lineWidth = 1;
+      // c.beginPath(); c.arc(rx, CY2 + 10, 3, Math.PI, 0); c.stroke();
+    }
+    const valH  = 10;
+    const valGr = c.createLinearGradient(0, CY2, 0, CY2 + valH);
+    // valGr.addColorStop(0, 'hsl(34,43%,56%)'); valGr.addColorStop(1, 'hsl(34,42%,50%)');
+    c.fillStyle = valGr; c.fillRect(CX - 4, CY2, CW + 10, valH);
+    c.strokeStyle = 'rgba(0,0,0,0.14)'; c.lineWidth = 0.5;
+    c.strokeRect(CX - 4, CY2, CW + 10, valH);
+    // c.strokeStyle = 'rgba(255,255,255,0.20)'; c.lineWidth = 0.7;
+    c.beginPath(); c.moveTo(CX - 2, CY2 + 1); c.lineTo(CX + CW + 8, CY2 + 1); c.stroke();
+
+    const fabricY = CY2 + valH;
     const cpW     = (CW / 2) * (1 - cO * 0.84);
-    const fabricY = CY2 - CH + 9;
     if (cpW > 3) {
-      ['l', 'r'].forEach(side => {
-        const cx2 = side === 'l' ? CX : CX + CW - cpW;
-        const fabricG = c.createLinearGradient(cx2, fabricY, cx2 + cpW, fabricY);
-        if (side === 'l') {
-          fabricG.addColorStop(0.00, '#5a4530'); fabricG.addColorStop(0.15, '#4a3a28');
-          fabricG.addColorStop(0.40, '#3e3020'); fabricG.addColorStop(0.70, '#362a1c');
-          fabricG.addColorStop(0.88, '#3e3020'); fabricG.addColorStop(1.00, '#2a2014');
-        } else {
-          fabricG.addColorStop(0.00, '#2a2014'); fabricG.addColorStop(0.12, '#3e3020');
-          fabricG.addColorStop(0.30, '#362a1c'); fabricG.addColorStop(0.60, '#3e3020');
-          fabricG.addColorStop(0.85, '#4a3a28'); fabricG.addColorStop(1.00, '#5a4530');
-        }
-        c.fillStyle = fabricG; rr(c, cx2, fabricY, cpW, CH, 5); c.fill();
-        const foldCount = Math.max(12, Math.floor(cpW / 12));
-        const foldStep  = cpW / foldCount;
-        for (let fi = 0; fi < foldCount; fi++) {
-          const fx = cx2 + fi * foldStep, fw = foldStep;
-          const shadowG = c.createLinearGradient(fx, 0, fx + fw * 0.35, 0);
-          shadowG.addColorStop(0, 'rgba(0,0,0,0.36)'); shadowG.addColorStop(1, 'rgba(0,0,0,0)');
-          c.fillStyle = shadowG; c.fillRect(fx, fabricY, fw * 0.2, CH);
-          const hlG = c.createLinearGradient(fx + fw * 0.5, 0, fx + fw, 0);
-          hlG.addColorStop(0.6, 'rgba(255,255,255,0.055)'); hlG.addColorStop(1, 'rgba(255,255,255,0.02)');
-          c.fillStyle = hlG; c.fillRect(fx + fw * 0.5, fabricY, fw * 0.5, CH);
-          if (fi > 0) {
-            c.strokeStyle = 'rgba(0,0,0,0.52)'; c.lineWidth = 0.6;
-            c.beginPath(); c.moveTo(fx, fabricY + 2); c.lineTo(fx, fabricY + CH - 2); c.stroke();
-          }
-        }
-        c.strokeStyle = 'rgba(0,0,0,0.08)'; c.lineWidth = 0.3;
-        for (let ty = fabricY + 3; ty < fabricY + CH - 2; ty += 3) {
-          c.beginPath(); c.moveTo(cx2 + 2, ty); c.lineTo(cx2 + cpW - 2, ty); c.stroke();
-        }
-        const edgeX = side === 'l' ? cx2 + cpW - 2 : cx2 + 2;
-        c.strokeStyle = 'rgba(180,150,100,0.22)'; c.lineWidth = 1;
-        c.beginPath(); c.moveTo(edgeX, fabricY + 2); c.lineTo(edgeX, fabricY + CH - 2); c.stroke();
-        c.strokeStyle = 'rgba(0,0,0,0.28)'; c.lineWidth = 0.5;
-        rr(c, cx2, fabricY, cpW, CH, 5); c.stroke();
-      });
+      drawCurtainPanel(c, CX,            fabricY, cpW, CH - valH + 4, 'l', br, lr, lg, lb);
+      drawCurtainPanel(c, CX + CW - cpW, fabricY, cpW, CH - valH + 4, 'r', br, lr, lg, lb);
       if (cO > 0.05) {
         const gapX = CX + cpW, gapW = CW - cpW * 2;
-        if (gapW > 0) {
+        if (gapW > 2) {
           const gapG = c.createLinearGradient(gapX, 0, gapX + gapW, 0);
-          gapG.addColorStop(0, 'rgba(180,210,255,0.04)');
-          gapG.addColorStop(0.5, 'rgba(180,210,255,0.09)');
-          gapG.addColorStop(1, 'rgba(180,210,255,0.04)');
-          c.fillStyle = gapG; c.fillRect(gapX, fabricY, gapW, CH);
+          gapG.addColorStop(0, 'rgba(200,220,255,0.05)'); gapG.addColorStop(0.5, 'rgba(200,220,255,0.10)'); gapG.addColorStop(1, 'rgba(200,220,255,0.05)');
+          c.fillStyle = gapG; c.fillRect(gapX, fabricY, gapW, CH - valH + 4);
+          const esW = Math.min(gapW * 0.35, 7);
+          const lE = c.createLinearGradient(gapX, 0, gapX + esW, 0);
+          lE.addColorStop(0, 'rgba(0,0,0,0.20)'); lE.addColorStop(1, 'rgba(0,0,0,0)');
+          c.fillStyle = lE; c.fillRect(gapX, fabricY, esW, CH - valH + 4);
+          const rE = c.createLinearGradient(gapX + gapW, 0, gapX + gapW - esW, 0);
+          rE.addColorStop(0, 'rgba(0,0,0,0.20)'); rE.addColorStop(1, 'rgba(0,0,0,0)');
+          c.fillStyle = rE; c.fillRect(gapX + gapW - esW, fabricY, esW, CH - valH + 4);
         }
       }
     }
 
-    // ── Fan ─────────────────────────────────────────────────────────────────
-    const FCX = WX + WW * 0.5, FCY = WY + WH * 0.47;
+    // ── Fan ──
+    const FCX      = WX + WW * 0.48, FCY = WY + WH * 0.42;
     const fanSpeed = fan?.speed ?? 0;
-
-    // Air-ring glow — fades with velocity
-    const velNorm = Math.min(fanVel / 15, 1); // 0..1
+    const velNorm  = Math.min(fanVel / 19, 1);
     if (velNorm > 0.01) {
-      for (let ring = 18; ring <= 18 + fanSpeed * 8; ring += 8) {
+      for (let ring = 18; ring <= 18 + Math.max(fanSpeed, 1) * 8; ring += 8) {
         c.strokeStyle = `rgba(80,150,255,${Math.max(0, 0.06 - ring * 0.001) * velNorm})`;
         c.lineWidth = 0.4;
         c.beginPath(); c.arc(FCX, FCY, ring, 0, Math.PI * 2); c.stroke();
       }
     }
-
-    // Blades — opacity fades as they slow down so they "disappear" naturally
-    const bladeAlpha = Math.min(0.9, 0.45 + velNorm * 0.95);
-
+    const bladeAlpha = Math.min(0.9, 0.65 + velNorm * 0.95);
     c.save(); c.translate(FCX, FCY); c.rotate(fa * Math.PI / 180);
     [60, 180, 300].forEach(a => {
       c.save(); c.rotate(a * Math.PI / 180);
-      const bG = c.createLinearGradient(0, -56, 0, 4);
-      bG.addColorStop(0, `rgba(255,255,255,${bladeAlpha})`);
-      bG.addColorStop(1, `rgba(255,255,255,${bladeAlpha})`);
       c.fillStyle   = `rgba(255,255,255,${bladeAlpha})`;
       c.strokeStyle = `rgba(255,255,255,${bladeAlpha})`;
       c.lineWidth   = 0.4;
@@ -326,63 +438,44 @@ export default function RoomLayout() {
       c.restore();
     });
     c.restore();
-
-    // Hub — always visible
     const hubG = c.createRadialGradient(FCX, FCY, 5, FCX, FCY, 13);
-    hubG.addColorStop(0, 'rgba(255,255,255,0.75)');
-    hubG.addColorStop(1, 'rgba(255,255,255,0.70)');
+    hubG.addColorStop(0, 'rgba(255,255,255,0.75)'); hubG.addColorStop(1, 'rgba(255,255,255,0.75)');
     c.fillStyle   = hubG;
-    c.strokeStyle = 'rgba(255,255,255,0.70)'; c.lineWidth = 1.1;
+    c.strokeStyle = 'rgba(255,255,255,0.75)'; c.lineWidth = 1.1;
     c.beginPath(); c.arc(FCX, FCY, 10, 0, Math.PI * 2); c.fill(); c.stroke();
     c.fillStyle = 'rgba(255,255,255,0.90)';
     c.beginPath(); c.arc(FCX, FCY, 4, 0, Math.PI * 2); c.fill();
 
-    c.restore(); // end scale
+    c.restore();
   }, []);
 
-  // ── Animation loop ──────────────────────────────────────────────────────────
   useEffect(() => {
     let raf;
-
     const loop = () => {
-      const devs    = S.current;
-      const fan     = devs ? byType(devs, "fan") : null;
-      const ac      = devs ? byType(devs, "ac")  : null;
-      const fanSpeed = fan?.speed ?? 0;
-
-      // Target velocity: what the fan SHOULD be spinning at right now
+      const devs      = S.current;
+      const fan       = devs ? byType(devs, "fan") : null;
+      const ac        = devs ? byType(devs, "ac")  : null;
+      const fanSpeed  = fan?.speed ?? 0;
       const targetVel = fanSpeed > 0 ? (SPEED_TO_DPF[fanSpeed] ?? fanSpeed * 4) : 0;
-
-      // Smoothly accelerate toward target; decelerate with inertia when off
-      const currentVel = fanVelocRef.current;
+      const curVel    = fanVelocRef.current;
       if (fanSpeed > 0) {
-        // Spin up: lerp toward target velocity (feels like motor engaging)
-        fanVelocRef.current = currentVel + (targetVel - currentVel) * 0.05;
+        fanVelocRef.current = curVel + (targetVel - curVel) * 0.05;
       } else {
-        // Spin down: subtract deceleration each frame (inertia / friction)
-        const next = currentVel - DECEL;
+        const next = curVel - DECEL;
         fanVelocRef.current = next < 0 ? 0 : next;
       }
-
-      // Advance angle by current velocity
-      if (fanVelocRef.current > 0.01) {
+      if (fanVelocRef.current > 0.01)
         fanAngleRef.current = (fanAngleRef.current + fanVelocRef.current) % 360;
-      }
-
-      // AC wind animation
-      if (ac?.on) {
-        acWindRef.current = (acWindRef.current + 1.2) % 360;
-      }
-
+      // Advance arc phase — controls expansion speed
+      if (ac?.on)
+        acPhaseRef.current = (acPhaseRef.current + 0.005) % 1.0;
       draw();
       raf = requestAnimationFrame(loop);
     };
-
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
   }, [draw]);
 
-  // ── Resize observer ──
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -404,13 +497,7 @@ export default function RoomLayout() {
     <div
       className="flex-1 w-full sm:min-h-0 rounded-2xl overflow-hidden transition-all duration-400"
       ref={containerRef}
-      style={{
-        width: '100%',
-        aspectRatio: '3 / 2',
-        borderRadius: '12px',
-        overflow: 'hidden',
-        position: 'relative',
-      }}
+      style={{ width: '100%', aspectRatio: '3 / 2', borderRadius: '12px', overflow: 'hidden', position: 'relative' }}
     >
       <canvas
         ref={canvasRef}

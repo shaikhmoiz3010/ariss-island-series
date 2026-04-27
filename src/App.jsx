@@ -346,50 +346,152 @@ export default function App() {
         </div>
 
         {/* ── Email Capture ── */}
-        {showEmailCapture && (
-          <div className="fixed bottom-0 left-0 right-0 z-[150] transition-all duration-500 ease-out" style={{ animation: "slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards" }}>
+{showEmailCapture && (
+          <div className="fixed bottom-24 left-0 right-0 z-[150]" style={{ animation: "slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards" }}>
             <style>{`
               @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
               @keyframes spin { to { transform: rotate(360deg); } }
-              @keyframes checkmark { 0% { stroke-dashoffset: 100; opacity: 0; } 50% { opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 1; } }
+              @keyframes checkmark { 0% { stroke-dashoffset: 100; opacity: 0; } 100% { stroke-dashoffset: 0; opacity: 1; } }
               .loading-spinner { animation: spin 1s linear infinite; }
-              .checkmark-path { stroke-dasharray: 100; animation: checkmark 0.6s ease-out forwards; }
+              .checkmark-path { stroke-dasharray: 100; animation: checkmark 0.5s ease-out forwards; }
             `}</style>
-            <div className="max-w-md mx-auto m-4 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl" style={{ background: isDark ? "linear-gradient(135deg, rgba(30,30,40,0.98) 0%, rgba(20,20,30,0.98) 100%)" : "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(250,250,255,0.98) 100%)", border: isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(99,102,241,0.2)", boxShadow: isDark ? "0 20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)" : "0 20px 60px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.95)" }}>
-              <button onClick={() => setShowEmailCapture(false)} className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95" style={{ background: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)", opacity: isLoading ? 0.5 : 1, pointerEvents: isLoading ? "none" : "auto" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" style={{ stroke: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)" }}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+            <div
+              className="max-w-sm mx-auto m-12 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl"
+              style={{
+                background: isDark
+                  ? "linear-gradient(135deg, rgba(30,30,40,0.98) 0%, rgba(20,20,30,0.98) 100%)"
+                  : "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(250,250,255,0.98) 100%)",
+                border: isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(99,102,241,0.2)",
+                boxShadow: isDark
+                  ? "0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)"
+                  : "0 12px 40px rgba(99,102,241,0.18), inset 0 1px 0 rgba(255,255,255,0.95)",
+              }}
+            >
+              {/* Close */}
+              <button
+                onClick={() => setShowEmailCapture(false)}
+                className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95"
+                style={{ background: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.05)", opacity: isLoading ? 0.4 : 1, pointerEvents: isLoading ? "none" : "auto" }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" style={{ stroke: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.55)" }}>
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
-              <div className="p-8 pt-10">
+
+              <div className="p-5 pt-6">
                 {!isSubmitted ? (
                   <>
-                    <div className="w-16 h-16 rounded-full flex items-center justify-center mb-5 mx-auto transition-all duration-300" style={{ background: isDark ? "linear-gradient(135deg, #f59e0b 0%, #f97316 100%)" : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)", boxShadow: isDark ? "0 8px 32px rgba(245,158,11,0.4), 0 0 0 8px rgba(245,158,11,0.1)" : "0 8px 32px rgba(99,102,241,0.3), 0 0 0 8px rgba(99,102,241,0.1)", transform: isLoading ? "scale(0.95)" : "scale(1)" }}>
-                      {isLoading
-                        ? <svg className="loading-spinner" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                        : <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                      }
-                    </div>
-                    <h3 className="text-xl font-bold text-center mb-2" style={{ background: isDark ? "linear-gradient(90deg, rgba(255,255,255,0.95) 0%, rgba(245,158,11,0.95) 50%, rgba(255,255,255,0.95) 100%)" : "linear-gradient(90deg, rgba(30,30,60,0.95) 0%, rgba(99,102,241,0.95) 50%, rgba(30,30,60,0.95) 100%)", backgroundSize: "200% auto", backgroundClip: "text", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Loving the Island Series?</h3>
-                    <p className="text-sm text-center mb-6" style={{ color: isDark ? "rgba(255,255,255,0.65)" : "rgba(60,60,90,0.65)" }}>Be the first to know when it's available</p>
-                    <form onSubmit={handleEmailSubmit} className="space-y-4">
-                      <input type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} disabled={isLoading} required className="w-full px-5 py-3.5 rounded-xl border-2 outline-none transition-all duration-200" style={{ background: isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.9)", borderColor: error ? "#ef4444" : isDark ? "rgba(255,255,255,0.15)" : "rgba(99,102,241,0.2)", color: isDark ? "rgba(255,255,255,0.9)" : "rgba(30,30,60,0.9)", opacity: isLoading ? 0.7 : 1 }} />
-                      <div className="relative">
-                        <input type="tel" placeholder="WhatsApp Number" value={whatsapp} onChange={e => setWhatsapp(e.target.value.replace(/[^\d+\s]/g, ""))} disabled={isLoading} required className="w-full px-5 py-3.5 rounded-xl border-2 outline-none transition-all duration-200" style={{ background: isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.9)", borderColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(99,102,241,0.2)", color: isDark ? "rgba(255,255,255,0.9)" : "rgba(30,30,60,0.9)", opacity: isLoading ? 0.7 : 1 }} />
+                    {/* Icon + heading row */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <div
+                        className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center transition-transform duration-300"
+                        style={{
+                          background: isDark
+                            ? "linear-gradient(135deg, #f59e0b 0%, #f97316 100%)"
+                            : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                          boxShadow: isDark ? "0 4px 16px rgba(245,158,11,0.35)" : "0 4px 16px rgba(99,102,241,0.28)",
+                          transform: isLoading ? "scale(0.92)" : "scale(1)",
+                        }}
+                      >
+                        {isLoading
+                          ? <svg className="loading-spinner" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                          : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        }
                       </div>
-                      {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
-                      <button type="submit" disabled={isLoading} className="w-full px-5 py-3.5 rounded-xl font-bold text-base cursor-pointer transition-all duration-300 relative overflow-hidden" style={{ background: isLoading ? (isDark ? "rgba(245,158,11,0.5)" : "rgba(99,102,241,0.5)") : (isDark ? "linear-gradient(135deg, #f59e0b 0%, #f97316 100%)" : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"), color: "#fff", boxShadow: isLoading ? "none" : (isDark ? "0 6px 24px rgba(245,158,11,0.35)" : "0 6px 24px rgba(99,102,241,0.3)") }}>
+                      <div>
+                        <h3
+                          className="text-sm font-bold leading-tight"
+                          style={{
+                            background: isDark
+                              ? "linear-gradient(90deg, rgba(255,255,255,0.95), rgba(245,158,11,0.95))"
+                              : "linear-gradient(90deg, rgba(30,30,60,0.95), rgba(99,102,241,0.95))",
+                            backgroundClip: "text", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                          }}
+                        >
+                          Loving the Island Series?
+                        </h3>
+                        <p className="text-xs mt-0.5" style={{ color: isDark ? "rgba(255,255,255,0.55)" : "rgba(60,60,90,0.55)" }}>
+                          Be the first to know when it's available
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Form */}
+                    <form onSubmit={handleEmailSubmit} className="space-y-2">
+                      <input
+                        type="email"
+                        placeholder="Email address"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        disabled={isLoading}
+                        required
+                        className="w-full px-3.5 py-2.5 rounded-lg border outline-none transition-all duration-200 text-sm"
+                        style={{
+                          background: isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.9)",
+                          borderColor: error ? "#ef4444" : isDark ? "rgba(255,255,255,0.14)" : "rgba(99,102,241,0.2)",
+                          color: isDark ? "rgba(255,255,255,0.9)" : "rgba(30,30,60,0.9)",
+                          opacity: isLoading ? 0.65 : 1,
+                        }}
+                      />
+                      <input
+                        type="tel"
+                        placeholder="WhatsApp number"
+                        value={whatsapp}
+                        onChange={e => setWhatsapp(e.target.value.replace(/[^\d+\s]/g, ""))}
+                        disabled={isLoading}
+                        required
+                        className="w-full px-3.5 py-2.5 rounded-lg border outline-none transition-all duration-200 text-sm"
+                        style={{
+                          background: isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.9)",
+                          borderColor: isDark ? "rgba(255,255,255,0.14)" : "rgba(99,102,241,0.2)",
+                          color: isDark ? "rgba(255,255,255,0.9)" : "rgba(30,30,60,0.9)",
+                          opacity: isLoading ? 0.65 : 1,
+                        }}
+                      />
+                      {error && <p className="text-red-500 text-xs">{error}</p>}
+                      <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full py-2.5 rounded-lg font-semibold text-sm cursor-pointer transition-all duration-300 relative overflow-hidden"
+                        style={{
+                          background: isLoading
+                            ? (isDark ? "rgba(245,158,11,0.45)" : "rgba(99,102,241,0.45)")
+                            : (isDark ? "linear-gradient(135deg, #f59e0b 0%, #f97316 100%)" : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"),
+                          color: "#fff",
+                          boxShadow: isLoading ? "none" : (isDark ? "0 4px 16px rgba(245,158,11,0.30)" : "0 4px 16px rgba(99,102,241,0.28)"),
+                        }}
+                      >
                         <span style={{ opacity: isLoading ? 0 : 1 }}>Notify Me</span>
-                        {isLoading && <div className="absolute inset-0 flex items-center justify-center gap-2"><svg className="loading-spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>Submitting...</span></div>}
+                        {isLoading && (
+                          <div className="absolute inset-0 flex items-center justify-center gap-1.5">
+                            <svg className="loading-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                            <span className="text-sm">Submitting...</span>
+                          </div>
+                        )}
                       </button>
                     </form>
-                    <p className="text-xs text-center mt-4" style={{ color: isDark ? "rgba(255,255,255,0.4)" : "rgba(60,60,90,0.4)" }}>🔒 We respect your privacy. Unsubscribe anytime.</p>
+
+                    <p className="text-[10px] text-center mt-2.5" style={{ color: isDark ? "rgba(255,255,255,0.30)" : "rgba(60,60,90,0.35)" }}>
+                      🔒 We respect your privacy.
+                    </p>
                   </>
                 ) : (
-                  <div className="text-center py-6">
-                    <div className="w-20 h-20 rounded-full flex items-center justify-center mb-5 mx-auto" style={{ background: isDark ? "rgba(34,197,94,0.15)" : "rgba(34,197,94,0.1)", boxShadow: "0 0 0 12px rgba(34,197,94,0.05)" }}>
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline className="checkmark-path" points="20 6 9 17 4 12" /></svg>
+                  /* Success state */
+                  <div className="text-center py-3">
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center mb-3 mx-auto"
+                      style={{ background: isDark ? "rgba(34,197,94,0.15)" : "rgba(34,197,94,0.10)", boxShadow: "0 0 0 8px rgba(34,197,94,0.05)" }}
+                    >
+                      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline className="checkmark-path" points="20 6 9 17 4 12" />
+                      </svg>
                     </div>
-                    <h3 className="text-2xl font-bold mb-3" style={{ color: isDark ? "rgba(255,255,255,0.95)" : "rgba(30,30,60,0.95)" }}>You're on the list!</h3>
-                    <p className="text-base" style={{ color: isDark ? "rgba(255,255,255,0.7)" : "rgba(60,60,90,0.7)" }}>We'll notify you as soon as the<br />Island Series becomes available</p>
+                    <h3 className="text-base font-bold mb-1" style={{ color: isDark ? "rgba(255,255,255,0.95)" : "rgba(30,30,60,0.95)" }}>
+                      You're on the list!
+                    </h3>
+                    <p className="text-sm" style={{ color: isDark ? "rgba(255,255,255,0.65)" : "rgba(60,60,90,0.65)" }}>
+                      We'll notify you when the Island Series launches.
+                    </p>
                   </div>
                 )}
               </div>
